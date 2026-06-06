@@ -5,11 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+use App\Models\Karyawan;
 class Jabatan extends Model
 {
     use HasFactory;
 
-    protected $primaryKey = 'id_jabatan';
 
     protected $fillable = [
         'nama_jabatan',
@@ -17,6 +17,6 @@ class Jabatan extends Model
 
     public function karyawans()
     {
-        return $this->hasMany(Karyawan::class, 'id_jabatan', 'id_jabatan');
+        return $this->hasMany(Karyawan::class);
     }
 }

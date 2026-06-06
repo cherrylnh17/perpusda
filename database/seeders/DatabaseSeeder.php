@@ -22,6 +22,8 @@ class DatabaseSeeder extends Seeder
         $this->call([
             JabatanSeeder::class,
             PendidikanSeeder::class,
+            JenisKontrakSeeder::class,
+            GolonganSeeder::class,
         ]);
     }
 }

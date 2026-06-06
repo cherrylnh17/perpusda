@@ -25,28 +25,31 @@ class DashboardController extends Controller
         $totalPendidikan   = Pendidikan::count();
         $totalJenisKontrak = JenisKontrak::count();
 
-        // ── Total & rata-rata gaji (hanya karyawan Aktif)
-        $totalGaji     = Karyawan::where('status_aktif', 'Aktif')->sum('gaji');
-        $rataRataGaji  = Karyawan::where('status_aktif', 'Aktif')->avg('gaji') ?? 0;
+        // ── Total & rata-rata gaji (hanya karyawan Aktif) ───────────────────
+        $totalGaji    = Karyawan::where('status_aktif', 'Aktif')->sum('gaji');
+        $rataRataGaji = Karyawan::where('status_aktif', 'Aktif')->avg('gaji') ?? 0;
 
         // ── Distribusi karyawan per jabatan (top 6) ─────────────────────────
+        // Menggunakan foreign key default Laravel: jabatan_id
         $karyawanPerJabatan = Karyawan::select('jabatans.nama_jabatan', DB::raw('COUNT(*) as total'))
-            ->join('jabatans', 'karyawans.id_jabatan', '=', 'jabatans.id_jabatan')
+            ->join('jabatans', 'karyawans.jabatan_id', '=', 'jabatans.id')
             ->groupBy('jabatans.nama_jabatan')
             ->orderByDesc('total')
             ->limit(6)
             ->get();
 
         // ── Distribusi karyawan per pendidikan ──────────────────────────────
+        // Menggunakan foreign key default Laravel: pendidikan_id
         $karyawanPerPendidikan = Karyawan::select('pendidikans.nama_pendidikan', DB::raw('COUNT(*) as total'))
-            ->join('pendidikans', 'karyawans.id_pendidikan', '=', 'pendidikans.id_pendidikan')
+            ->join('pendidikans', 'karyawans.pendidikan_id', '=', 'pendidikans.id')
             ->groupBy('pendidikans.nama_pendidikan')
             ->orderByDesc('total')
             ->get();
 
         // ── Distribusi karyawan per jenis kontrak ───────────────────────────
+        // Menggunakan foreign key default Laravel: jenis_kontrak_id
         $karyawanPerKontrak = Karyawan::select('jenis_kontraks.nama_kontrak', DB::raw('COUNT(*) as total'))
-            ->join('jenis_kontraks', 'karyawans.id_jenis_kontrak', '=', 'jenis_kontraks.id_jenis_kontrak')
+            ->join('jenis_kontraks', 'karyawans.jenis_kontrak_id', '=', 'jenis_kontraks.id')
             ->groupBy('jenis_kontraks.nama_kontrak')
             ->orderByDesc('total')
             ->get();
@@ -57,13 +60,55 @@ class DashboardController extends Controller
             ->limit(5)
             ->get();
 
-        // ── Statistik Laki-laki ──────────────────────────────────────────────
-        $totalLaki   = Karyawan::where('jenis_kelamin', 'Laki-laki')->count();
-        $umurLaki    = $this->distribusiUmur('Laki-laki');
-
-        // ── Statistik Perempuan ──────────────────────────────────────────────
+        // ── Statistik gender ─────────────────────────────────────────────────
+        $totalLaki      = Karyawan::where('jenis_kelamin', 'Laki-laki')->count();
         $totalPerempuan = Karyawan::where('jenis_kelamin', 'Perempuan')->count();
-        $umurPerempuan  = $this->distribusiUmur('Perempuan');
+
+        // ── PNS / PPPK per gender (via golongan) ─────────────────────────────
+        $pnsLaki = Karyawan::where('jenis_kelamin', 'Laki-laki')
+            ->whereHas('golongan', fn($q) => $q->where('tipe', 'PNS'))
+            ->count();
+
+        $pnsPerempuan = Karyawan::where('jenis_kelamin', 'Perempuan')
+            ->whereHas('golongan', fn($q) => $q->where('tipe', 'PNS'))
+            ->count();
+
+        $pppkLaki = Karyawan::where('jenis_kelamin', 'Laki-laki')
+            ->whereHas('golongan', fn($q) => $q->where('tipe', 'PPPK'))
+            ->count();
+
+        $pppkPerempuan = Karyawan::where('jenis_kelamin', 'Perempuan')
+            ->whereHas('golongan', fn($q) => $q->where('tipe', 'PPPK'))
+            ->count();
+
+        // ── Distribusi jenis kontrak per gender ──────────────────────────────
+        // Laki-laki: per jenis kontrak
+        $kontrakLaki = Karyawan::select('jenis_kontraks.nama_kontrak', DB::raw('COUNT(*) as total'))
+            ->join('jenis_kontraks', 'karyawans.jenis_kontrak_id', '=', 'jenis_kontraks.id')
+            ->where('karyawans.jenis_kelamin', 'Laki-laki')
+            ->groupBy('jenis_kontraks.nama_kontrak')
+            ->orderByDesc('total')
+            ->get();
+
+        // Perempuan: per jenis kontrak
+        $kontrakPerempuan = Karyawan::select('jenis_kontraks.nama_kontrak', DB::raw('COUNT(*) as total'))
+            ->join('jenis_kontraks', 'karyawans.jenis_kontrak_id', '=', 'jenis_kontraks.id')
+            ->where('karyawans.jenis_kelamin', 'Perempuan')
+            ->groupBy('jenis_kontraks.nama_kontrak')
+            ->orderByDesc('total')
+            ->get();
+
+        // ── 5 Karyawan aktif dengan kenaikan gaji H-30 terdekat ─────────────
+        $today = Carbon::today();
+        $batas = $today->copy()->addDays(30);
+
+        $karyawanNaikGaji = Karyawan::with(['jabatan'])
+            ->where('status_aktif', 'Aktif')
+            ->whereNotNull('tanggal_kenaikan_gaji_berikutnya')
+            ->whereBetween('tanggal_kenaikan_gaji_berikutnya', [$today, $batas])
+            ->orderBy('tanggal_kenaikan_gaji_berikutnya')
+            ->limit(5)
+            ->get();
 
         return view('dashboard', compact(
             'totalKaryawan',
@@ -81,27 +126,14 @@ class DashboardController extends Controller
             'karyawanPerKontrak',
             'karyawanTerbaru',
             'totalLaki',
-            'umurLaki',
             'totalPerempuan',
-            'umurPerempuan',
+            'pnsLaki',
+            'pnsPerempuan',
+            'pppkLaki',
+            'pppkPerempuan',
+            'kontrakLaki',
+            'kontrakPerempuan',
+            'karyawanNaikGaji',
         ));
-    }
-
-    // ── Helper: distribusi umur per kelompok usia ────────────────────────────
-    private function distribusiUmur(string $jenisKelamin): array
-    {
-        $today = Carbon::today();
-
-        $data = Karyawan::where('jenis_kelamin', $jenisKelamin)
-            ->whereNotNull('tanggal_lahir')
-            ->get(['tanggal_lahir'])
-            ->map(fn($k) => Carbon::parse($k->tanggal_lahir)->diffInYears($today));
-
-        return [
-            '20-30' => $data->filter(fn($u) => $u >= 20 && $u <= 30)->count(),
-            '31-40' => $data->filter(fn($u) => $u >= 31 && $u <= 40)->count(),
-            '41-50' => $data->filter(fn($u) => $u >= 41 && $u <= 50)->count(),
-            '50+'   => $data->filter(fn($u) => $u > 50)->count(),
-        ];
     }
 }

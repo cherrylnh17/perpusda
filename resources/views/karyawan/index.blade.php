@@ -28,6 +28,27 @@
             </div>
             @endif
 
+            {{-- ── Banner Kenaikan Mendekati (H-30) ──────────────────────── --}}
+            @if ($totalMendekatiKenaikan > 0 && !request()->filled('kenaikan'))
+            <div class="flex items-center justify-between gap-4 px-5 py-3.5 bg-amber-50 border border-amber-200 rounded-xl">
+                <div class="flex items-center gap-3">
+                    <span class="flex-shrink-0 w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center">
+                        <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/>
+                        </svg>
+                    </span>
+                    <p class="text-sm text-amber-800 font-medium">
+                        <span class="font-bold">{{ $totalMendekatiKenaikan }} karyawan</span>
+                        memiliki jadwal kenaikan dalam 30 hari ke depan.
+                    </p>
+                </div>
+                <a href="{{ route('karyawan.index', array_merge(request()->query(), ['kenaikan' => 'semua'])) }}"
+                   class="flex-shrink-0 text-xs font-semibold text-amber-700 hover:text-amber-900 underline underline-offset-2">
+                    Lihat Semua →
+                </a>
+            </div>
+            @endif
+
             {{-- ── Toolbar: Search + Filter + Aksi ───────────────────────── --}}
             <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
                 <form method="GET" action="{{ route('karyawan.index') }}" id="filterForm">
@@ -57,7 +78,7 @@
                                 class="text-sm border border-gray-200 rounded-xl px-3 py-2.5 focus:ring-2 focus:ring-blue-500 outline-none text-gray-600 bg-white">
                             <option value="">Semua Jabatan</option>
                             @foreach ($jabatans as $j)
-                            <option value="{{ $j->id_jabatan }}" {{ request('jabatan') == $j->id_jabatan ? 'selected' : '' }}>
+                            <option value="{{ $j->id }}" {{ request('jabatan') == $j->id ? 'selected' : '' }}>
                                 {{ $j->nama_jabatan }}
                             </option>
                             @endforeach
@@ -68,10 +89,34 @@
                                 class="text-sm border border-gray-200 rounded-xl px-3 py-2.5 focus:ring-2 focus:ring-blue-500 outline-none text-gray-600 bg-white">
                             <option value="">Semua Kontrak</option>
                             @foreach ($kontraks as $k)
-                            <option value="{{ $k->id_jenis_kontrak }}" {{ request('kontrak') == $k->id_jenis_kontrak ? 'selected' : '' }}>
+                            <option value="{{ $k->id }}" {{ request('kontrak') == $k->id ? 'selected' : '' }}>
                                 {{ $k->nama_kontrak }}
                             </option>
                             @endforeach
+                        </select>
+
+                        {{-- Filter Golongan --}}
+                        <select name="golongan" onchange="this.form.submit()"
+                                class="text-sm border border-gray-200 rounded-xl px-3 py-2.5 focus:ring-2 focus:ring-blue-500 outline-none text-gray-600 bg-white">
+                            <option value="">Semua Golongan</option>
+                            @foreach ($golongans->groupBy('tipe') as $tipe => $items)
+                                <optgroup label="{{ $tipe }}">
+                                    @foreach ($items as $g)
+                                    <option value="{{ $g->id }}" {{ request('golongan') == $g->id ? 'selected' : '' }}>
+                                        {{ $g->nama_golongan }}
+                                    </option>
+                                    @endforeach
+                                </optgroup>
+                            @endforeach
+                        </select>
+
+                        {{-- Filter Kenaikan --}}
+                        <select name="kenaikan" onchange="this.form.submit()"
+                                class="text-sm border border-gray-200 rounded-xl px-3 py-2.5 focus:ring-2 focus:ring-amber-500 outline-none text-gray-600 bg-white {{ request('kenaikan') ? 'border-amber-400 bg-amber-50 text-amber-700 font-semibold' : '' }}">
+                            <option value="">Semua Kenaikan</option>
+                            <option value="semua"    {{ request('kenaikan') == 'semua'   ? 'selected' : '' }}>⏰ H-30 Semua</option>
+                            <option value="gaji"     {{ request('kenaikan') == 'gaji'    ? 'selected' : '' }}>💰 H-30 Gaji</option>
+                            <option value="jabatan"  {{ request('kenaikan') == 'jabatan' ? 'selected' : '' }}>📋 H-30 Jabatan</option>
                         </select>
 
                         {{-- Tombol Search --}}
@@ -80,7 +125,7 @@
                             Cari
                         </button>
 
-                        @if (request()->hasAny(['search','status','jabatan','kontrak']))
+                        @if (request()->hasAny(['search','status','jabatan','kontrak','golongan','kenaikan']))
                         <a href="{{ route('karyawan.index') }}"
                            class="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-600 text-sm font-medium rounded-xl transition-colors text-center">
                             Reset
@@ -92,7 +137,6 @@
                 {{-- Row 2: Tombol Aksi --}}
                 <div class="flex flex-wrap gap-2 mt-4 pt-4 border-t border-gray-100">
 
-                    {{-- Tambah --}}
                     <a href="{{ route('karyawan.create') }}"
                        class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-xl transition-colors">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -101,7 +145,6 @@
                         Tambah Karyawan
                     </a>
 
-                    {{-- Export Excel --}}
                     <a href="{{ route('karyawan.export.excel', request()->query()) }}"
                        class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-xl transition-colors">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -110,7 +153,6 @@
                         Export Excel
                     </a>
 
-                    {{-- Export PDF --}}
                     <a href="{{ route('karyawan.export.pdf', request()->query()) }}" target="_blank"
                        class="inline-flex items-center gap-2 px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-sm font-medium rounded-xl transition-colors">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -119,7 +161,6 @@
                         Export PDF
                     </a>
 
-                    {{-- Import Excel --}}
                     <button onclick="document.getElementById('modalImport').classList.remove('hidden')"
                             class="inline-flex items-center gap-2 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-sm font-medium rounded-xl transition-colors">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -128,7 +169,6 @@
                         Import Excel
                     </button>
 
-                    {{-- Download Template --}}
                     <a href="{{ route('karyawan.template') }}"
                        class="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-600 text-sm font-medium rounded-xl transition-colors">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -142,12 +182,17 @@
             {{-- ── Tabel ───────────────────────────────────────────────────── --}}
             <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
 
-                {{-- Info jumlah --}}
                 <div class="px-6 py-3 border-b border-gray-100 flex items-center justify-between text-xs text-gray-500">
                     <span>
                         Menampilkan <strong class="text-gray-700">{{ $karyawans->firstItem() ?? 0 }}–{{ $karyawans->lastItem() ?? 0 }}</strong>
                         dari <strong class="text-gray-700">{{ $karyawans->total() }}</strong> karyawan
                     </span>
+                    @if (request('kenaikan'))
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-amber-100 text-amber-700 rounded-full text-xs font-semibold">
+                        <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                        Filter H-30 Aktif
+                    </span>
+                    @endif
                 </div>
 
                 <div class="overflow-x-auto">
@@ -159,17 +204,31 @@
                                 <th class="px-5 py-3 text-left">NIP / NIK</th>
                                 <th class="px-5 py-3 text-left">Jabatan</th>
                                 <th class="px-5 py-3 text-left">Kontrak</th>
+                                <th class="px-5 py-3 text-left">Golongan</th>
                                 <th class="px-5 py-3 text-left">Tgl Masuk</th>
                                 <th class="px-5 py-3 text-right">Gaji</th>
+                                <th class="px-5 py-3 text-center">Kenaikan</th>
                                 <th class="px-5 py-3 text-center">Status</th>
                                 <th class="px-5 py-3 text-center">Aksi</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-50">
                             @forelse ($karyawans as $k)
-                            <tr class="hover:bg-gray-50/60 transition-colors group">
+                            @php
+                                $today = now()->startOfDay();
+                                $batas30 = now()->addDays(30)->startOfDay();
 
-                                {{-- Nomor urut --}}
+                                $gajiDue    = $k->tanggal_kenaikan_gaji_berikutnya;
+                                $jabatanDue = $k->tanggal_kenaikan_jabatan_berikutnya;
+
+                                $gajiH30    = $gajiDue    && $gajiDue->gte($today)    && $gajiDue->lte($batas30);
+                                $jabatanH30 = $jabatanDue && $jabatanDue->gte($today) && $jabatanDue->lte($batas30);
+
+                                $gajiSisa    = $gajiDue    ? $today->diffInDays($gajiDue, false)    : null;
+                                $jabatanSisa = $jabatanDue ? $today->diffInDays($jabatanDue, false) : null;
+                            @endphp
+                            <tr class="hover:bg-gray-50/60 transition-colors group {{ ($gajiH30 || $jabatanH30) ? 'bg-amber-50/30' : '' }}">
+
                                 <td class="px-5 py-3 text-gray-400 text-xs">
                                     {{ $karyawans->firstItem() + $loop->index }}
                                 </td>
@@ -209,6 +268,16 @@
                                     {{ $k->jenisKontrak?->nama_kontrak ?? '-' }}
                                 </td>
 
+                                {{-- Golongan --}}
+                                <td class="px-5 py-3 text-xs">
+                                    @if ($k->golongan)
+                                        <span class="font-medium text-gray-700">{{ $k->golongan->nama_golongan }}</span>
+                                        <span class="block text-gray-400">{{ $k->golongan->tipe }}</span>
+                                    @else
+                                        <span class="text-gray-400">-</span>
+                                    @endif
+                                </td>
+
                                 {{-- Tgl Masuk --}}
                                 <td class="px-5 py-3 text-gray-500 text-xs whitespace-nowrap">
                                     {{ $k->tanggal_masuk?->format('d M Y') }}
@@ -217,6 +286,49 @@
                                 {{-- Gaji --}}
                                 <td class="px-5 py-3 text-right text-gray-700 font-medium text-xs whitespace-nowrap">
                                     Rp {{ number_format($k->gaji, 0, ',', '.') }}
+                                </td>
+
+                                {{-- Kolom Kenaikan (Badge H-30) --}}
+                                <td class="px-5 py-3">
+                                    <div class="flex flex-col gap-1 items-center">
+                                        {{-- Badge Kenaikan Gaji --}}
+                                        @if ($gajiDue)
+                                            @if ($gajiH30)
+                                                <span title="Kenaikan gaji: {{ $gajiDue->format('d M Y') }}"
+                                                      class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-700 whitespace-nowrap">
+                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                                    </svg>
+                                                    Gaji H-{{ $gajiSisa }}
+                                                </span>
+                                            @else
+                                                <span class="text-xs text-gray-400 whitespace-nowrap">
+                                                    💰 {{ $gajiDue->format('d M Y') }}
+                                                </span>
+                                            @endif
+                                        @endif
+
+                                        {{-- Badge Kenaikan Jabatan --}}
+                                        @if ($jabatanDue)
+                                            @if ($jabatanH30)
+                                                <span title="Kenaikan jabatan: {{ $jabatanDue->format('d M Y') }}"
+                                                      class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-700 whitespace-nowrap">
+                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                                    </svg>
+                                                    Jabatan H-{{ $jabatanSisa }}
+                                                </span>
+                                            @else
+                                                <span class="text-xs text-gray-400 whitespace-nowrap">
+                                                    📋 {{ $jabatanDue->format('d M Y') }}
+                                                </span>
+                                            @endif
+                                        @endif
+
+                                        @if (!$gajiDue && !$jabatanDue)
+                                            <span class="text-xs text-gray-300">—</span>
+                                        @endif
+                                    </div>
                                 </td>
 
                                 {{-- Status --}}
@@ -239,7 +351,6 @@
                                 <td class="px-5 py-3">
                                     <div class="flex items-center justify-center gap-2 opacity-70 group-hover:opacity-100 transition-opacity">
 
-                                        {{-- Detail --}}
                                         <a href="{{ route('karyawan.show', $k) }}"
                                            title="Detail"
                                            class="w-8 h-8 flex items-center justify-center rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-600 transition-colors">
@@ -249,7 +360,6 @@
                                             </svg>
                                         </a>
 
-                                        {{-- Edit --}}
                                         <a href="{{ route('karyawan.edit', $k) }}"
                                            title="Edit"
                                            class="w-8 h-8 flex items-center justify-center rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-600 transition-colors">
@@ -258,7 +368,6 @@
                                             </svg>
                                         </a>
 
-                                        {{-- Hapus --}}
                                         <form action="{{ route('karyawan.destroy', $k) }}" method="POST"
                                               onsubmit="return confirm('Hapus karyawan {{ addslashes($k->nama_lengkap) }}?')">
                                             @csrf @method('DELETE')
@@ -275,7 +384,7 @@
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="9" class="px-6 py-16 text-center">
+                                <td colspan="11" class="px-6 py-16 text-center">
                                     <div class="flex flex-col items-center gap-3 text-gray-400">
                                         <svg class="w-12 h-12" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m9-4a4 4 0 11-8 0 4 4 0 018 0zm6 4a2 2 0 100-4 2 2 0 000 4zM3 16a2 2 0 100-4 2 2 0 000 4z"/>
@@ -290,7 +399,6 @@
                     </table>
                 </div>
 
-                {{-- Pagination --}}
                 @if ($karyawans->hasPages())
                 <div class="px-6 py-4 border-t border-gray-100">
                     {{ $karyawans->links() }}
@@ -301,9 +409,7 @@
         </div>{{-- /max-w --}}
     </div>
 
-    {{-- ══════════════════════════════════════════════════════════════
-         Modal Import Excel
-    ══════════════════════════════════════════════════════════════ --}}
+    {{-- ══ Modal Import Excel ══════════════════════════════════════════════ --}}
     <div id="modalImport" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
             <div class="flex items-center justify-between mb-5">
@@ -318,14 +424,14 @@
 
             <form action="{{ route('karyawan.import') }}" method="POST" enctype="multipart/form-data">
                 @csrf
-                <div class="border-2 border-dashed border-gray-200 rounded-xl p-8 text-center mb-4" id="dropZone">
+                <div class="border-2 border-dashed border-gray-200 rounded-xl p-8 text-center mb-4">
                     <svg class="w-10 h-10 text-gray-300 mx-auto mb-2" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                     </svg>
                     <p class="text-sm text-gray-500 mb-2">Drag & drop file Excel, atau</p>
                     <label class="cursor-pointer text-sm text-blue-600 hover:underline font-medium">
                         Pilih File
-                        <input type="file" name="file" id="fileImport" accept=".xlsx,.xls" class="hidden"
+                        <input type="file" name="file" accept=".xlsx,.xls" class="hidden"
                                onchange="document.getElementById('fileName').textContent = this.files[0]?.name ?? ''">
                     </label>
                     <p id="fileName" class="text-xs text-gray-400 mt-2"></p>
@@ -335,7 +441,7 @@
                 <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-700 mb-4">
                     <p class="font-semibold mb-1">Kolom wajib:</p>
                     <p><strong>nip, nik, nama_lengkap, tgl_masuk, tgl_mulai_jabatan</strong></p>
-                    <p class="mt-1 text-amber-600">Kolom baru: <strong>jenis_kelamin</strong> (Laki-laki/Perempuan) &amp; <strong>tanggal_lahir</strong> (dd/mm/yyyy). Download template untuk format lengkap.</p>
+                    <p class="mt-1 text-amber-600">Kolom baru: <strong>tgl_kenaikan_gaji</strong> & <strong>tgl_kenaikan_jabatan</strong>. Download template untuk format lengkap.</p>
                 </div>
 
                 <div class="flex gap-3">

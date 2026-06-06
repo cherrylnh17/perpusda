@@ -37,6 +37,11 @@
                     </x-nav-link>
                 </div>
                 <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
+                    <x-nav-link :href="route('golongan.index')" :active="request()->routeIs('golongan.index')">
+                        {{ __('Golongan') }}
+                    </x-nav-link>
+                </div>
+                <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
                     <x-nav-link :href="route('dashboard')" :active="request()->routeIs('countdown')">
                         {{ __('Hitung Mundur') }}
                     </x-nav-link>
@@ -44,7 +49,110 @@
             </div>
 
             <!-- Settings Dropdown -->
-            <div class="hidden sm:flex sm:items-center sm:ms-6">
+            <div class="hidden sm:flex sm:items-center sm:ms-6 gap-3">
+
+                {{-- ── Lonceng Notifikasi Kenaikan ── --}}
+                <div x-data="{ openNotif: false }" class="relative" @click.outside="openNotif = false">
+                    <button @click="openNotif = !openNotif"
+                        class="relative p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors focus:outline-none">
+                        {{-- Ikon lonceng --}}
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                        </svg>
+                        {{-- Badge jumlah notifikasi --}}
+                        @if($jumlahNotifikasi > 0)
+                        <span class="absolute top-0.5 right-0.5 inline-flex items-center justify-center w-4 h-4 text-xs font-bold text-white bg-red-500 rounded-full leading-none">
+                            {{ $jumlahNotifikasi > 9 ? '9+' : $jumlahNotifikasi }}
+                        </span>
+                        @endif
+                    </button>
+
+                    {{-- Dropdown panel notifikasi --}}
+                    <div x-show="openNotif"
+                         x-transition:enter="transition ease-out duration-150"
+                         x-transition:enter-start="opacity-0 scale-95 -translate-y-1"
+                         x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                         x-transition:leave="transition ease-in duration-100"
+                         x-transition:leave-start="opacity-100 scale-100"
+                         x-transition:leave-end="opacity-0 scale-95"
+                         class="absolute right-0 mt-2 w-80 bg-white rounded-2xl shadow-xl border border-gray-100 z-50 overflow-hidden"
+                         style="display: none;">
+
+                        {{-- Header panel --}}
+                        <div class="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                <h3 class="text-sm font-semibold text-gray-800">Notifikasi Kenaikan</h3>
+                            </div>
+                            @if($jumlahNotifikasi > 0)
+                            <span class="text-xs font-medium text-white bg-red-500 rounded-full px-2 py-0.5">{{ $jumlahNotifikasi }} baru</span>
+                            @endif
+                        </div>
+
+                        {{-- List notifikasi --}}
+                        <ul class="max-h-80 overflow-y-auto divide-y divide-gray-50">
+                            @forelse ($notifikasiKenaikan as $notif)
+                            @php
+                                $sisa = \Carbon\Carbon::today()->diffInDays($notif->tanggal_kenaikan, false);
+                                $isGaji = $notif->tipe === 'gaji';
+                                $iconBg = $isGaji ? 'bg-green-100' : 'bg-violet-100';
+                                $iconColor = $isGaji ? 'text-green-600' : 'text-violet-600';
+                                $badgeColor = $sisa <= 7 ? 'text-red-600 bg-red-50' : ($sisa <= 14 ? 'text-amber-600 bg-amber-50' : 'text-blue-600 bg-blue-50');
+                            @endphp
+                            <li class="px-4 py-3 hover:bg-gray-50 transition-colors">
+                                <div class="flex items-start gap-3">
+                                    {{-- Icon tipe --}}
+                                    <div class="w-8 h-8 rounded-full {{ $iconBg }} flex items-center justify-center flex-shrink-0 mt-0.5">
+                                        @if($isGaji)
+                                        <svg class="w-4 h-4 {{ $iconColor }}" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                        </svg>
+                                        @else
+                                        <svg class="w-4 h-4 {{ $iconColor }}" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                                        </svg>
+                                        @endif
+                                    </div>
+                                    {{-- Info karyawan --}}
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-xs font-semibold text-gray-800 truncate">{{ $notif->karyawan?->nama_lengkap ?? '-' }}</p>
+                                        <p class="text-xs text-gray-500 truncate">
+                                            {{ $isGaji ? 'Kenaikan Gaji' : 'Kenaikan Jabatan' }}
+                                            · {{ $notif->karyawan?->jabatan?->nama_jabatan ?? '-' }}
+                                        </p>
+                                        <p class="text-xs text-gray-400 mt-0.5">
+                                            {{ $notif->tanggal_kenaikan->format('d M Y') }}
+                                        </p>
+                                    </div>
+                                    {{-- Badge H- --}}
+                                    <span class="flex-shrink-0 text-xs font-bold px-2 py-0.5 rounded-full {{ $badgeColor }}">
+                                        H-{{ $sisa }}
+                                    </span>
+                                </div>
+                            </li>
+                            @empty
+                            <li class="px-4 py-8 text-center">
+                                <svg class="w-8 h-8 text-gray-300 mx-auto mb-2" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                                </svg>
+                                <p class="text-xs text-gray-400">Tidak ada notifikasi</p>
+                            </li>
+                            @endforelse
+                        </ul>
+
+                        {{-- Footer --}}
+                        @if($jumlahNotifikasi > 0)
+                        <div class="px-4 py-2.5 border-t border-gray-100 bg-gray-50">
+                            <p class="text-xs text-center text-gray-400">Menampilkan {{ $notifikasiKenaikan->count() }} dari {{ $jumlahNotifikasi }} notifikasi</p>
+                        </div>
+                        @endif
+                    </div>
+                </div>
+                {{-- ── end Lonceng ── --}}
+
                 <x-dropdown align="right" width="48">
                     <x-slot name="trigger">
                         <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-white hover:text-gray-700 focus:outline-none transition ease-in-out duration-150">

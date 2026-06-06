@@ -1,57 +1,68 @@
 <?php
 
-use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\JabatanController;
-use App\Http\Controllers\JenisKontrakController;
-use App\Http\Controllers\KaryawanController;
-use App\Http\Controllers\PendidikanController;
-use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('welcome');
-});
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\KaryawanController;
+use App\Http\Controllers\PendidikanController;
+use App\Http\Controllers\JabatanController;
+use App\Http\Controllers\JenisKontrakController;
+use App\Http\Controllers\GolonganController;
 
-Route::get('/countdown', function () {
-    return view('welcome');
-})->name('countdown');
+Route::view('/', 'welcome');
 
-Route::get('/dashboard', [DashboardController::class, 'index'])
-    ->middleware(['auth', 'verified'])
-    ->name('dashboard');
+Route::middleware(['auth', 'verified'])->group(function () {
 
-Route::prefix('karyawan')->name('karyawan.')->middleware('auth')->group(function () {
+    // Dashboard
+    Route::get('/dashboard', [DashboardController::class, 'index'])
+        ->name('dashboard');
 
-    // CRUD standard (resource)
+    // Countdown
+    Route::view('/countdown', 'welcome')
+        ->name('countdown');
 
-    // Export
-    Route::get('export/excel',   [KaryawanController::class, 'exportExcel'])->name('export.excel');
-    Route::get('export/pdf',     [KaryawanController::class, 'exportPdf'])->name('export.pdf');
+    // Profile
+    Route::controller(ProfileController::class)
+        ->prefix('profile')
+        ->name('profile.')
+        ->group(function () {
+            Route::get('/', 'edit')->name('edit');
+            Route::patch('/', 'update')->name('update');
+            Route::delete('/', 'destroy')->name('destroy');
+        });
 
-    // Import
-    Route::post('import',        [KaryawanController::class, 'importExcel'])->name('import');
+    // Master Data
+    Route::resources([
+        'pendidikan' => PendidikanController::class,
+        'jabatan'    => JabatanController::class,
+        'kontrak'    => JenisKontrakController::class,
+        'golongan'   => GolonganController::class,
+    ]);
 
-    // ── Route baru: download template dinamis (fix: tidak butuh file statis) ──
-    Route::get('template',       [KaryawanController::class, 'downloadTemplate'])->name('template');
+    // Karyawan
+    Route::prefix('karyawan')
+        ->name('karyawan.')
+        ->controller(KaryawanController::class)
+        ->group(function () {
 
-    // Hapus foto
-    Route::delete('{karyawan}/foto', [KaryawanController::class, 'deleteFoto'])->name('foto.destroy');
+            Route::get('export/excel', 'exportExcel')
+                ->name('export.excel');
 
-    Route::resource('/', KaryawanController::class)
-        ->parameters(['' => 'karyawan']);
+            Route::get('export/pdf', 'exportPdf')
+                ->name('export.pdf');
 
-});
+            Route::post('import', 'importExcel')
+                ->name('import');
 
-Route::resource('pendidikan', PendidikanController::class)->names('pendidikan');
+            Route::get('template', 'downloadTemplate')
+                ->name('template');
 
-Route::resource('jabatan', JabatanController::class)->names('jabatan');
+            Route::delete('{karyawan}/foto', 'deleteFoto')
+                ->name('foto.destroy');
+        });
 
-Route::resource('kontrak', JenisKontrakController::class)->names('kontrak');
-
-Route::middleware('auth')->group(function () {
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::resource('karyawan', KaryawanController::class);
 });
 
 require __DIR__.'/auth.php';

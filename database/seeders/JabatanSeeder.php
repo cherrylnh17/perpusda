@@ -15,54 +15,52 @@ class JabatanSeeder extends Seeder
         $jabatans = [
             //  Pimpinan kontrak
             'Kepala Dinas',
-            'Sekretaris Dinas',
 
-            //  Subbagian kontrak
-            'Subbagian Perencanaan, Evaluasi, Pelaporan dan Keuangan',
-            'Subbagian Umum dan Kepegawaian',
 
-            //  Jabatan Fungsional Kearsipan
-            'Kelompok Jabatan Fungsional',
-            'Koordinator Kearsipan',
-            'Arsiparis Ahli',
-            'Arsiparis Terampil',
-            'Pengelola Arsip',
-            'Petugas Digitalisasi Arsip',
-            'Petugas Preservasi Arsip',
-            'Petugas Akuisisi Arsip',
-            'Pengadministrasi Kearsipan',
-            'Kelompok Jabatan Fungsional Bidang Kearsipan',
+            'Sekretaris',
 
-            //  Jabatan Fungsional Perpustakaan
-            'Koordinator Perpustakaan',
-            'Pustakawan Ahli',
-            'Pustakawan Terampil',
-            'Pengelola Koleksi Buku',
-            'Petugas Layanan Perpustakaan',
-            'Petugas Sirkulasi Buku',
-            'Petugas Perpustakaan Keliling',
-            'Operator Sistem Perpustakaan',
-            'Pengadministrasi Perpustakaan',
-            'Kelompok Jabatan Fungsional Bidang Perpustakaan',
 
-            //  Jabatan Fungsional Umum
-            'Pustakawan',
-            'Arsiparis',
-            'Pranata Komputer',
-            'Analis SDM Aparatur',
-            'Perencana',
-            'Pengelola Keuangan',
-            'Bendahara',
-            'Verifikator Keuangan',
-            'Pengadministrasi Umum',
-            'Pengelola Barang dan Aset',
+            'JF Pustakawan Ahli Madya',
+            'JF Arsipasi Ahli Madya',
 
-            //  Staf & Pendukung
-            'Operator Komputer',
-            'Staff Tata Usaha',
-            'Pengemudi',
-            'Satpam',
-            'Petugas Kebersihan',
+
+            'JF Perencana Ahli Pertama',
+            'JF Pranata Komputer Ahli Pertama',
+            'JF Pranata Komputer Pelaksana Lanjutan/ Mahir',
+            'JF Pranata Komputer Pelaksana/ Terampil',
+            'Penelaah Teknis Kebijakan',
+            'Pengolah Data dan Informasi',
+            'Pengadministrasi Perkebunan',
+
+
+            'JF Arsiparis Pelaksana/ Terampil',
+            'Penelaah Teknis Kebijakan',
+            'Pengelola Layanan Operasional',
+            'Pengolah Data dan Informasi',
+            'Pengadministrasi Perkantoran',
+            'Pengelola Umum Operasional',
+
+
+            'JF Perencana Ahli Muda',
+
+
+            'JF Arsiparis Ahli Muda',
+            'JF Arsiparis Ahli Pertama',
+            'JF Arsiparis Penyelia',
+            'JF Arsiparis Pelaksana Lanjutan/ Mahir',
+            'JF Arsiparis Pelaksana/ Terampil',
+            'Pengadministrasi Perkantoran',
+
+
+            'JF Pustakawan Ahli Muda ',
+            'JF Pustakawan Ahli Pertama',
+            'JF Asisten Perpustakaan Penyelia',
+            'JF Asisten Perpustakaan Pelaksana Lanjutan/ Mahir ',
+            'JF Asisten Perpustakaan Pelaksana/ Terampil',
+            'Penelaah Teknis Kebijakan',
+            'Pengolah Data dan Informasi ',
+            'Pengadministrasi Perkantoran',
+
         ];
 
         foreach ($jabatans as $nama) {

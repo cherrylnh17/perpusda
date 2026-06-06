@@ -2,16 +2,16 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 use App\Models\Karyawan;
-class Pendidikan extends Model
+class Golongan extends Model
 {
-    use HasFactory;
+    protected $table = 'golongans';
 
     protected $fillable = [
-        'nama_pendidikan',
+        'tipe',
+        'nama_golongan',
     ];
 
     public function karyawans()
