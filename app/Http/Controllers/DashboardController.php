@@ -110,6 +110,15 @@ class DashboardController extends Controller
             ->limit(5)
             ->get();
 
+        // ── 5 Karyawan aktif dengan kenaikan jabatan H-30 terdekat ──────────
+        $karyawanNaikJabatan = Karyawan::with(['jabatan'])
+            ->where('status_aktif', 'Aktif')
+            ->whereNotNull('tanggal_kenaikan_jabatan_berikutnya')
+            ->whereBetween('tanggal_kenaikan_jabatan_berikutnya', [$today, $batas])
+            ->orderBy('tanggal_kenaikan_jabatan_berikutnya')
+            ->limit(5)
+            ->get();
+
         return view('dashboard', compact(
             'totalKaryawan',
             'karyawanAktif',
@@ -119,8 +128,6 @@ class DashboardController extends Controller
             'totalJabatan',
             'totalPendidikan',
             'totalJenisKontrak',
-            'totalGaji',
-            'rataRataGaji',
             'karyawanPerJabatan',
             'karyawanPerPendidikan',
             'karyawanPerKontrak',
@@ -134,6 +141,7 @@ class DashboardController extends Controller
             'kontrakLaki',
             'kontrakPerempuan',
             'karyawanNaikGaji',
+            'karyawanNaikJabatan',
         ));
     }
 }

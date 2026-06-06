@@ -1,14 +1,14 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-
-use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\KaryawanController;
-use App\Http\Controllers\PendidikanController;
+use App\Http\Controllers\GolonganController;
 use App\Http\Controllers\JabatanController;
 use App\Http\Controllers\JenisKontrakController;
-use App\Http\Controllers\GolonganController;
+use App\Http\Controllers\KaryawanController;
+use App\Http\Controllers\KenaikanController;
+use App\Http\Controllers\PendidikanController;
+use App\Http\Controllers\ProfileController;
+use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome');
 
@@ -63,6 +63,21 @@ Route::middleware(['auth', 'verified'])->group(function () {
         });
 
     Route::resource('karyawan', KaryawanController::class);
+
+    Route::prefix('kenaikan')->name('kenaikan.')->group(function () {
+
+        // Halaman daftar countdown + filter
+        Route::get('/',  [KenaikanController::class, 'index'])->name('index');
+
+        // Approve / Reject kenaikan GAJI per karyawan
+        Route::post('/{karyawan}/approve-gaji',  [KenaikanController::class, 'approveGaji'])->name('approve-gaji');
+        Route::post('/{karyawan}/reject-gaji',   [KenaikanController::class, 'rejectGaji'])->name('reject-gaji');
+
+        // Approve / Reject kenaikan JABATAN per karyawan
+        Route::post('/{karyawan}/approve-jabatan', [KenaikanController::class, 'approveJabatan'])->name('approve-jabatan');
+        Route::post('/{karyawan}/reject-jabatan',  [KenaikanController::class, 'rejectJabatan'])->name('reject-jabatan');
+
+    });
 });
 
 require __DIR__.'/auth.php';

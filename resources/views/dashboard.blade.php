@@ -83,102 +83,206 @@
             </div>
 
             {{-- ══════════════════════════════════════════════════════
-                 BARIS 2 — Gaji + Master Data
+                 BARIS 2 — Kenaikan Gaji & Jabatan H-30
             ══════════════════════════════════════════════════════ --}}
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div class="grid grid-cols-1 xl:grid-cols-2 gap-5">
 
-                {{-- Gaji + Kenaikan Gaji H-30 --}}
-                <div class="md:col-span-2 bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-                    <div class="flex items-center justify-between mb-4">
-                        <p class="text-xs font-semibold uppercase tracking-widest text-gray-400">Penggajian (Karyawan Aktif)</p>
-                    </div>
-                    <div class="flex items-end gap-6 mb-4">
-                        <div>
-                            <p class="text-xs text-gray-500 mb-1">Total Gaji</p>
-                            <p class="text-2xl font-extrabold text-gray-800">Rp {{ number_format($totalGaji, 0, ',', '.') }}</p>
-                        </div>
-                        <div class="pb-0.5">
-                            <p class="text-xs text-gray-500 mb-1">Rata-rata / orang</p>
-                            <p class="text-lg font-bold text-blue-600">Rp {{ number_format($rataRataGaji, 0, ',', '.') }}</p>
-                        </div>
-                    </div>
+    {{-- ── Kenaikan Gaji ──────────────────────────────────────────────────── --}}
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
 
-                    {{-- 5 Karyawan Kenaikan Gaji H-30 --}}
-                    <div class="border-t border-gray-100 pt-4">
-                        <div class="flex items-center justify-between mb-3">
-                            <p class="text-xs font-semibold text-gray-600 flex items-center gap-1.5">
-                                <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                </svg>
-                                Kenaikan Gaji H-30
-                            </p>
-                            <a href="{{ route('karyawan.index') }}" class="text-xs text-blue-600 hover:underline font-medium">Lihat Semua →</a>
-                        </div>
-                        <ul class="space-y-2">
-                            @forelse ($karyawanNaikGaji as $k)
-                            @php
-                                $sisa = \Carbon\Carbon::today()->diffInDays($k->tanggal_kenaikan_gaji_berikutnya, false);
-                                $urgency = $sisa <= 7 ? 'text-red-600 bg-red-50 border border-red-200' : ($sisa <= 14 ? 'text-amber-600 bg-amber-50 border border-amber-200' : 'text-emerald-600 bg-emerald-50 border border-emerald-200');
-                            @endphp
-                            <li class="flex items-center justify-between py-1.5 border-b border-gray-50 last:border-0">
-                                <div class="flex items-center gap-2 min-w-0">
-                                    <div class="w-7 h-7 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0 text-xs font-bold text-blue-600">
-                                        {{ strtoupper(substr($k->nama_lengkap, 0, 1)) }}
-                                    </div>
-                                    <div class="min-w-0">
-                                        <p class="text-xs font-semibold text-gray-800 truncate">{{ $k->nama_lengkap }}</p>
-                                        <p class="text-xs text-gray-400 truncate">{{ $k->jabatan?->nama_jabatan ?? '-' }}</p>
-                                    </div>
-                                </div>
-                                <div class="flex items-center gap-2 flex-shrink-0 ml-2">
-                                    <span class="text-xs text-gray-400">{{ $k->tanggal_kenaikan_gaji_berikutnya->format('d M Y') }}</span>
-                                    <span class="text-xs font-bold px-2 py-0.5 rounded-full {{ $urgency }}">
-                                        H-{{ $sisa }}
-                                    </span>
-                                </div>
-                            </li>
-                            @empty
-                            <li class="text-xs text-gray-400 text-center py-3">Tidak ada kenaikan gaji dalam 30 hari ke depan.</li>
-                            @endforelse
-                        </ul>
-                    </div>
+        {{-- Header --}}
+        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+            <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center">
+                    <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                              d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
                 </div>
-
-                {{-- Master: Jabatan --}}
-                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex flex-col justify-between">
-                    <div class="w-10 h-10 rounded-xl bg-violet-100 flex items-center justify-center mb-3">
-                        <svg class="w-5 h-5 text-violet-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-                        </svg>
-                    </div>
-                    <div>
-                        <p class="text-3xl font-extrabold text-gray-800">{{ $totalJabatan }}</p>
-                        <p class="text-xs text-gray-400 mt-0.5">Jabatan terdaftar</p>
-                    </div>
-                    <div class="mt-3 text-xs text-violet-500 font-medium">Master Data</div>
+                <div>
+                    <h3 class="text-sm font-semibold text-gray-800">Kenaikan Gaji</h3>
+                    <p class="text-xs text-gray-400">Jadwal dalam 30 hari ke depan</p>
                 </div>
-
-                {{-- Master: Pendidikan + Jenis Kontrak --}}
-                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex flex-col justify-between">
-                    <div class="w-10 h-10 rounded-xl bg-teal-100 flex items-center justify-center mb-3">
-                        <svg class="w-5 h-5 text-teal-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                        </svg>
-                    </div>
-                    <div class="grid grid-cols-2 gap-3">
-                        <div>
-                            <p class="text-2xl font-extrabold text-gray-800">{{ $totalPendidikan }}</p>
-                            <p class="text-xs text-gray-400 mt-0.5">Pendidikan</p>
-                        </div>
-                        <div>
-                            <p class="text-2xl font-extrabold text-gray-800">{{ $totalJenisKontrak }}</p>
-                            <p class="text-xs text-gray-400 mt-0.5">Jenis Kontrak</p>
-                        </div>
-                    </div>
-                    <div class="mt-3 text-xs text-teal-500 font-medium">Master Data</div>
-                </div>
-
             </div>
+
+            <a href="{{ route('kenaikan.index', ['tipe' => 'gaji', 'rentang' => '30']) }}"
+               class="inline-flex items-center gap-1 text-xs font-semibold text-green-600 hover:text-green-800 transition-colors">
+                Lihat Semua
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+                </svg>
+            </a>
+        </div>
+
+        {{-- List --}}
+        @forelse ($karyawanNaikGaji as $k)
+        @php
+            $sisa = (int) now()->startOfDay()->diffInDays($k->tanggal_kenaikan_gaji_berikutnya, false);
+            if ($sisa <= 7) {
+                $pill = 'bg-red-100 text-red-700';
+                $pulse = 'animate-pulse';
+            } elseif ($sisa <= 14) {
+                $pill = 'bg-orange-100 text-orange-700';
+                $pulse = '';
+            } else {
+                $pill = 'bg-green-100 text-green-700';
+                $pulse = '';
+            }
+        @endphp
+        <div class="flex items-center gap-4 px-6 py-3.5 hover:bg-gray-50/60 transition-colors {{ !$loop->last ? 'border-b border-gray-50' : '' }}">
+
+            {{-- Avatar --}}
+            @if ($k->foto)
+                <img src="{{ asset('storage/' . $k->foto) }}"
+                     alt="{{ $k->nama_lengkap }}"
+                     class="w-9 h-9 rounded-full object-cover ring-2 ring-gray-100 flex-shrink-0">
+            @else
+                <div class="w-9 h-9 rounded-full bg-green-100 flex items-center justify-center text-green-700 font-bold text-sm flex-shrink-0">
+                    {{ strtoupper(substr($k->nama_lengkap, 0, 1)) }}
+                </div>
+            @endif
+
+            {{-- Info --}}
+            <div class="flex-1 min-w-0">
+                <p class="text-sm font-medium text-gray-800 truncate">{{ $k->nama_lengkap }}</p>
+                <p class="text-xs text-gray-400 truncate">{{ $k->jabatan?->nama_jabatan ?? '-' }}</p>
+            </div>
+
+            {{-- Countdown + tanggal --}}
+            <div class="text-right flex-shrink-0">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold {{ $pill }} {{ $pulse }}">
+                    H-{{ $sisa }}
+                </span>
+                <p class="text-xs text-gray-400 mt-0.5">
+                    {{ $k->tanggal_kenaikan_gaji_berikutnya->format('d M Y') }}
+                </p>
+            </div>
+        </div>
+        @empty
+        <div class="px-6 py-10 text-center">
+            <div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-2">
+                <svg class="w-5 h-5 text-gray-300" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+            </div>
+            <p class="text-xs text-gray-400">Tidak ada jadwal kenaikan gaji dalam 30 hari ke depan.</p>
+        </div>
+        @endforelse
+
+        {{-- Footer link --}}
+        @if ($karyawanNaikGaji->isNotEmpty())
+        <div class="px-6 py-3 border-t border-gray-50 bg-gray-50/50">
+            <a href="{{ route('kenaikan.index', ['tipe' => 'gaji', 'rentang' => '30']) }}"
+               class="flex items-center justify-center gap-1.5 text-xs font-medium text-green-600 hover:text-green-800 transition-colors">
+                Lihat semua jadwal kenaikan gaji
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+                </svg>
+            </a>
+        </div>
+        @endif
+
+    </div>{{-- /Kenaikan Gaji --}}
+
+
+    {{-- ── Kenaikan Jabatan ────────────────────────────────────────────────── --}}
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+
+        {{-- Header --}}
+        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+            <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
+                    <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                              d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="text-sm font-semibold text-gray-800">Kenaikan Jabatan</h3>
+                    <p class="text-xs text-gray-400">Jadwal dalam 30 hari ke depan</p>
+                </div>
+            </div>
+
+            <a href="{{ route('kenaikan.index', ['tipe' => 'jabatan', 'rentang' => '30']) }}"
+               class="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:text-blue-800 transition-colors">
+                Lihat Semua
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+                </svg>
+            </a>
+        </div>
+
+        {{-- List --}}
+        @forelse ($karyawanNaikJabatan as $k)
+        @php
+            $sisaJ = (int) now()->startOfDay()->diffInDays($k->tanggal_kenaikan_jabatan_berikutnya, false);
+            if ($sisaJ <= 7) {
+                $pillJ = 'bg-red-100 text-red-700';
+                $pulseJ = 'animate-pulse';
+            } elseif ($sisaJ <= 14) {
+                $pillJ = 'bg-orange-100 text-orange-700';
+                $pulseJ = '';
+            } else {
+                $pillJ = 'bg-blue-100 text-blue-700';
+                $pulseJ = '';
+            }
+        @endphp
+        <div class="flex items-center gap-4 px-6 py-3.5 hover:bg-gray-50/60 transition-colors {{ !$loop->last ? 'border-b border-gray-50' : '' }}">
+
+            {{-- Avatar --}}
+            @if ($k->foto)
+                <img src="{{ asset('storage/' . $k->foto) }}"
+                     alt="{{ $k->nama_lengkap }}"
+                     class="w-9 h-9 rounded-full object-cover ring-2 ring-gray-100 flex-shrink-0">
+            @else
+                <div class="w-9 h-9 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-sm flex-shrink-0">
+                    {{ strtoupper(substr($k->nama_lengkap, 0, 1)) }}
+                </div>
+            @endif
+
+            {{-- Info --}}
+            <div class="flex-1 min-w-0">
+                <p class="text-sm font-medium text-gray-800 truncate">{{ $k->nama_lengkap }}</p>
+                <p class="text-xs text-gray-400 truncate">{{ $k->jabatan?->nama_jabatan ?? '-' }}</p>
+            </div>
+
+            {{-- Countdown + tanggal --}}
+            <div class="text-right flex-shrink-0">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold {{ $pillJ }} {{ $pulseJ }}">
+                    H-{{ $sisaJ }}
+                </span>
+                <p class="text-xs text-gray-400 mt-0.5">
+                    {{ $k->tanggal_kenaikan_jabatan_berikutnya->format('d M Y') }}
+                </p>
+            </div>
+        </div>
+        @empty
+        <div class="px-6 py-10 text-center">
+            <div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-2">
+                <svg class="w-5 h-5 text-gray-300" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                </svg>
+            </div>
+            <p class="text-xs text-gray-400">Tidak ada jadwal kenaikan jabatan dalam 30 hari ke depan.</p>
+        </div>
+        @endforelse
+
+        {{-- Footer link --}}
+        @if ($karyawanNaikJabatan->isNotEmpty())
+        <div class="px-6 py-3 border-t border-gray-50 bg-gray-50/50">
+            <a href="{{ route('kenaikan.index', ['tipe' => 'jabatan', 'rentang' => '30']) }}"
+               class="flex items-center justify-center gap-1.5 text-xs font-medium text-blue-600 hover:text-blue-800 transition-colors">
+                Lihat semua jadwal kenaikan jabatan
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+                </svg>
+            </a>
+        </div>
+        @endif
+
+    </div>{{-- /Kenaikan Jabatan --}}
+
+</div>
 
             {{-- ══════════════════════════════════════════════════════
                  BARIS 3 — Demografi Gender per Jenis Kontrak
