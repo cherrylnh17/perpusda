@@ -3,11 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\Karyawan;
-use App\Models\KenaikanGaji;
-use App\Models\KenaikanJabatan;
-use App\Models\Jabatan;
+use App\Models\Golongan;
+use App\Models\PengajuanKenaikanBerkala;
+use App\Models\PengajuanKenaikanGolongan;
+use App\Models\HistoriGolongan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
 class KenaikanController extends Controller
@@ -20,47 +22,43 @@ class KenaikanController extends Controller
             'jabatan',
             'golongan',
             'jenisKontrak',
-            'kenaikanGajiPending',
-            'kenaikanJabatanPending',
+            'pengajuanBerkalaPending',
+            'pengajuanGolonganPending.golonganBaru',
         ])->where('status_aktif', 'Aktif');
 
         // ── Filter tipe kenaikan ─────────────────────────────────────────────
-        $tipe = $request->input('tipe', 'semua'); // semua | gaji | jabatan
-
-        // ── Filter rentang hari ──────────────────────────────────────────────
+        $tipe    = $request->input('tipe', 'semua'); // semua | berkala | golongan
         $rentang = $request->input('rentang', '30'); // 7 | 14 | 30 | semua
         $today   = Carbon::today();
 
         if ($rentang !== 'semua') {
             $batas = $today->copy()->addDays((int) $rentang);
 
-            if ($tipe === 'gaji') {
-                $query->whereBetween('tanggal_kenaikan_gaji_berikutnya', [$today, $batas]);
+            if ($tipe === 'berkala') {
+                $query->whereBetween('tanggal_berkala_berikutnya', [$today, $batas]);
 
-            } elseif ($tipe === 'jabatan') {
-                $query->whereBetween('tanggal_kenaikan_jabatan_berikutnya', [$today, $batas]);
+            } elseif ($tipe === 'golongan') {
+                $query->whereHas('pengajuanGolonganPending');
 
             } else {
-                // semua: gaji ATAU jabatan dalam rentang
+                // semua: berkala ATAU ada pengajuan golongan pending
                 $query->where(function ($q) use ($today, $batas) {
-                    $q->whereBetween('tanggal_kenaikan_gaji_berikutnya', [$today, $batas])
-                      ->orWhereBetween('tanggal_kenaikan_jabatan_berikutnya', [$today, $batas]);
+                    $q->whereBetween('tanggal_berkala_berikutnya', [$today, $batas])
+                      ->orWhereHas('pengajuanGolonganPending');
                 });
             }
         } else {
-            // Rentang "semua" → tetap filter supaya hanya yang punya jadwal tampil
-            if ($tipe === 'gaji') {
-                $query->whereNotNull('tanggal_kenaikan_gaji_berikutnya')
-                      ->where('tanggal_kenaikan_gaji_berikutnya', '>=', $today);
+            if ($tipe === 'berkala') {
+                $query->whereNotNull('tanggal_berkala_berikutnya')
+                      ->where('tanggal_berkala_berikutnya', '>=', $today);
 
-            } elseif ($tipe === 'jabatan') {
-                $query->whereNotNull('tanggal_kenaikan_jabatan_berikutnya')
-                      ->where('tanggal_kenaikan_jabatan_berikutnya', '>=', $today);
+            } elseif ($tipe === 'golongan') {
+                $query->whereHas('pengajuanGolonganPending');
 
             } else {
                 $query->where(function ($q) use ($today) {
-                    $q->where('tanggal_kenaikan_gaji_berikutnya', '>=', $today)
-                      ->orWhere('tanggal_kenaikan_jabatan_berikutnya', '>=', $today);
+                    $q->where('tanggal_berkala_berikutnya', '>=', $today)
+                      ->orWhereHas('pengajuanGolonganPending');
                 });
             }
         }
@@ -74,177 +72,188 @@ class KenaikanController extends Controller
             });
         }
 
-        // ── Urutkan: yang paling dekat jadwalnya tampil di atas ─────────────
-        // Gunakan LEAST() agar baris dengan 2 kenaikan tetap terurut oleh yang paling dekat
+        // ── Urutkan: yang paling dekat jadwal berkala tampil di atas ─────────
         $query->orderByRaw("
-            LEAST(
-                COALESCE(tanggal_kenaikan_gaji_berikutnya, '9999-12-31'),
-                COALESCE(tanggal_kenaikan_jabatan_berikutnya, '9999-12-31')
-            ) ASC
+            COALESCE(tanggal_berkala_berikutnya, '9999-12-31') ASC
         ");
 
         $karyawans = $query->paginate(15)->withQueryString();
 
-        // ── Summary count (untuk kartu di atas) ─────────────────────────────
+        // ── Summary count ────────────────────────────────────────────────────
         $batas30 = $today->copy()->addDays(30);
 
-        $totalGajiH30 = Karyawan::where('status_aktif', 'Aktif')
-            ->whereBetween('tanggal_kenaikan_gaji_berikutnya', [$today, $batas30])
+        $totalBerkalaH30 = Karyawan::where('status_aktif', 'Aktif')
+            ->whereBetween('tanggal_berkala_berikutnya', [$today, $batas30])
             ->count();
 
-        $totalJabatanH30 = Karyawan::where('status_aktif', 'Aktif')
-            ->whereBetween('tanggal_kenaikan_jabatan_berikutnya', [$today, $batas30])
+        $totalGolonganPending = Karyawan::where('status_aktif', 'Aktif')
+            ->whereHas('pengajuanGolonganPending')
             ->count();
 
         $totalSemuaH30 = Karyawan::where('status_aktif', 'Aktif')
             ->where(function ($q) use ($today, $batas30) {
-                $q->whereBetween('tanggal_kenaikan_gaji_berikutnya', [$today, $batas30])
-                  ->orWhereBetween('tanggal_kenaikan_jabatan_berikutnya', [$today, $batas30]);
+                $q->whereBetween('tanggal_berkala_berikutnya', [$today, $batas30])
+                  ->orWhereHas('pengajuanGolonganPending');
             })->count();
 
-        // ── Data untuk modal approve jabatan: daftar jabatan ─────────────────
-        $jabatans = Jabatan::orderBy('nama_jabatan')->get();
+        // ── Daftar golongan untuk modal approve golongan ─────────────────────
+        $golongans = Golongan::orderBy('tipe')->orderBy('nama_golongan')->get();
 
         return view('kenaikan.index', compact(
             'karyawans',
-            'jabatans',
-            'totalGajiH30',
-            'totalJabatanH30',
+            'golongans',
+            'totalBerkalaH30',
+            'totalGolonganPending',
             'totalSemuaH30',
             'tipe',
             'rentang',
         ));
     }
 
-    // ── APPROVE GAJI ──────────────────────────────────────────────────────────
+    // ── APPROVE BERKALA ───────────────────────────────────────────────────────
 
-    public function approveGaji(Request $request, Karyawan $karyawan)
+    public function approveBerkala(Request $request, Karyawan $karyawan)
     {
         $request->validate([
-            'gaji_baru'           => 'required|numeric|min:0',
-            'tanggal_berlaku'     => 'required|date',
-            'tanggal_berikutnya'  => 'required|date|after:tanggal_berlaku',
-            'catatan'             => 'nullable|string|max:500',
+            'tanggal_efektif'    => 'required|date',
+            'tanggal_berikutnya' => 'required|date|after:tanggal_efektif',
+            'catatan'            => 'nullable|string|max:500',
         ]);
 
-        // Buat / ambil pengajuan pending — jika belum ada, buat baru
-        $pengajuan = KenaikanGaji::firstOrCreate(
-            [
-                'karyawan_id' => $karyawan->id,
-                'status'      => 'pending',
-            ],
-            [
-                'gaji_lama'       => $karyawan->gaji,
-                'gaji_baru'       => $request->gaji_baru,
-                'tanggal_berlaku' => $request->tanggal_berlaku,
-            ]
-        );
+        DB::transaction(function () use ($request, $karyawan) {
+            // Cari atau buat pengajuan pending
+            $pengajuan = PengajuanKenaikanBerkala::firstOrCreate(
+                ['id_karyawan' => $karyawan->id_karyawan, 'status' => 'pending'],
+                ['tanggal_efektif' => $request->tanggal_efektif]
+            );
 
-        $pengajuan->approve(
-            adminId:           Auth::id(),
-            gajiBaru:          (float) $request->gaji_baru,
-            tanggalBerikutnya: $request->tanggal_berikutnya,
-            catatan:           $request->catatan,
-        );
+            // Tandai diterima
+            $pengajuan->update([
+                'status'        => 'diterima',
+                'catatan'       => $request->catatan,
+                'diproses_oleh' => Auth::id(),
+                'diproses_pada' => now(),
+            ]);
+
+            // Update jadwal berkala di karyawan
+            $karyawan->update([
+                'tanggal_berkala_terakhir'   => $request->tanggal_efektif,
+                'tanggal_berkala_berikutnya' => $request->tanggal_berikutnya,
+            ]);
+        });
 
         return redirect()->route('kenaikan.index', $request->only(['tipe', 'rentang', 'search']))
-            ->with('success', "Kenaikan gaji {$karyawan->nama_lengkap} berhasil di-approve.");
+            ->with('success', "Kenaikan berkala {$karyawan->nama_lengkap} berhasil disetujui.");
     }
 
-    // ── REJECT GAJI ───────────────────────────────────────────────────────────
+    // ── REJECT BERKALA ────────────────────────────────────────────────────────
 
-    public function rejectGaji(Request $request, Karyawan $karyawan)
+    public function rejectBerkala(Request $request, Karyawan $karyawan)
     {
         $request->validate([
             'tanggal_berikutnya' => 'required|date|after:today',
             'catatan'            => 'nullable|string|max:500',
         ]);
 
-        $pengajuan = KenaikanGaji::firstOrCreate(
-            [
-                'karyawan_id' => $karyawan->id,
-                'status'      => 'pending',
-            ],
-            [
-                'gaji_lama'       => $karyawan->gaji,
-                'gaji_baru'       => $karyawan->gaji,
-                'tanggal_berlaku' => $karyawan->tanggal_kenaikan_gaji_berikutnya,
-            ]
-        );
+        DB::transaction(function () use ($request, $karyawan) {
+            $pengajuan = PengajuanKenaikanBerkala::firstOrCreate(
+                ['id_karyawan' => $karyawan->id_karyawan, 'status' => 'pending'],
+                ['tanggal_efektif' => $karyawan->tanggal_berkala_berikutnya]
+            );
 
-        $pengajuan->reject(
-            adminId:           Auth::id(),
-            tanggalBerikutnya: $request->tanggal_berikutnya,
-            catatan:           $request->catatan,
-        );
+            $pengajuan->update([
+                'status'        => 'ditolak',
+                'catatan'       => $request->catatan,
+                'diproses_oleh' => Auth::id(),
+                'diproses_pada' => now(),
+            ]);
+
+            // Jadwal ulang saja, berkala terakhir tidak berubah
+            $karyawan->update([
+                'tanggal_berkala_berikutnya' => $request->tanggal_berikutnya,
+            ]);
+        });
 
         return redirect()->route('kenaikan.index', $request->only(['tipe', 'rentang', 'search']))
-            ->with('success', "Kenaikan gaji {$karyawan->nama_lengkap} ditolak & dijadwal ulang.");
+            ->with('success', "Kenaikan berkala {$karyawan->nama_lengkap} ditolak & dijadwal ulang.");
     }
 
-    // ── APPROVE JABATAN ───────────────────────────────────────────────────────
+    // ── APPROVE GOLONGAN ──────────────────────────────────────────────────────
 
-    public function approveJabatan(Request $request, Karyawan $karyawan)
+    public function approveGolongan(Request $request, Karyawan $karyawan)
     {
         $request->validate([
-            'jabatan_baru_id'    => 'required|exists:jabatans,id',
-            'tanggal_berlaku'    => 'required|date',
-            'tanggal_berikutnya' => 'required|date|after:tanggal_berlaku',
+            'golongan_baru_id'   => 'required|exists:golongans,id_golongan',
+            'tanggal_efektif'    => 'required|date',
+            'tanggal_berikutnya' => 'required|date|after:tanggal_efektif',
             'catatan'            => 'nullable|string|max:500',
         ]);
 
-        $pengajuan = KenaikanJabatan::firstOrCreate(
-            [
-                'karyawan_id' => $karyawan->id,
-                'status'      => 'pending',
-            ],
-            [
-                'jabatan_lama_id' => $karyawan->jabatan_id,
-                'jabatan_baru_id' => $request->jabatan_baru_id,
-                'tanggal_berlaku' => $request->tanggal_berlaku,
-            ]
-        );
+        DB::transaction(function () use ($request, $karyawan) {
+            $pengajuan = PengajuanKenaikanGolongan::firstOrCreate(
+                ['id_karyawan' => $karyawan->id_karyawan, 'status' => 'pending'],
+                [
+                    'golongan_lama_id' => $karyawan->id_golongan,
+                    'golongan_baru_id' => $request->golongan_baru_id,
+                    'tanggal_efektif'  => $request->tanggal_efektif,
+                ]
+            );
 
-        $pengajuan->approve(
-            adminId:           Auth::id(),
-            jabatanBaruId:     (int) $request->jabatan_baru_id,
-            tanggalBerlaku:    $request->tanggal_berlaku,
-            tanggalBerikutnya: $request->tanggal_berikutnya,
-            catatan:           $request->catatan,
-        );
+            $pengajuan->update([
+                'golongan_baru_id' => $request->golongan_baru_id,
+                'tanggal_efektif'  => $request->tanggal_efektif,
+                'status'           => 'diterima',
+                'catatan'          => $request->catatan,
+                'diproses_oleh'    => Auth::id(),
+                'diproses_pada'    => now(),
+            ]);
+
+            // Catat histori
+            HistoriGolongan::create([
+                'id_karyawan'           => $karyawan->id_karyawan,
+                'golongan_lama_id'      => $pengajuan->golongan_lama_id,
+                'golongan_baru_id'      => $request->golongan_baru_id,
+                'tanggal_efektif'       => $request->tanggal_efektif,
+                'id_pengajuan_golongan' => $pengajuan->id_pengajuan_golongan,
+                'dicatat_oleh'          => Auth::id(),
+            ]);
+
+            // Update golongan & jadwal berkala berikutnya di karyawan
+            $karyawan->update([
+                'id_golongan'                => $request->golongan_baru_id,
+                'tanggal_mulai_golongan'     => $request->tanggal_efektif,
+                'tanggal_berkala_berikutnya' => $request->tanggal_berikutnya,
+            ]);
+        });
 
         return redirect()->route('kenaikan.index', $request->only(['tipe', 'rentang', 'search']))
-            ->with('success', "Kenaikan jabatan {$karyawan->nama_lengkap} berhasil di-approve.");
+            ->with('success', "Kenaikan golongan {$karyawan->nama_lengkap} berhasil disetujui.");
     }
 
-    // ── REJECT JABATAN ────────────────────────────────────────────────────────
+    // ── REJECT GOLONGAN ───────────────────────────────────────────────────────
 
-    public function rejectJabatan(Request $request, Karyawan $karyawan)
+    public function rejectGolongan(Request $request, Karyawan $karyawan)
     {
         $request->validate([
-            'tanggal_berikutnya' => 'required|date|after:today',
-            'catatan'            => 'nullable|string|max:500',
+            'catatan' => 'nullable|string|max:500',
         ]);
 
-        $pengajuan = KenaikanJabatan::firstOrCreate(
-            [
-                'karyawan_id' => $karyawan->id,
-                'status'      => 'pending',
-            ],
-            [
-                'jabatan_lama_id' => $karyawan->jabatan_id,
-                'jabatan_baru_id' => $karyawan->jabatan_id,
-                'tanggal_berlaku' => $karyawan->tanggal_kenaikan_jabatan_berikutnya,
-            ]
-        );
+        DB::transaction(function () use ($request, $karyawan) {
+            $pengajuan = PengajuanKenaikanGolongan::where('id_karyawan', $karyawan->id_karyawan)
+                ->where('status', 'pending')
+                ->first();
 
-        $pengajuan->reject(
-            adminId:           Auth::id(),
-            tanggalBerikutnya: $request->tanggal_berikutnya,
-            catatan:           $request->catatan,
-        );
+            if ($pengajuan) {
+                $pengajuan->update([
+                    'status'        => 'ditolak',
+                    'catatan'       => $request->catatan,
+                    'diproses_oleh' => Auth::id(),
+                    'diproses_pada' => now(),
+                ]);
+            }
+        });
 
         return redirect()->route('kenaikan.index', $request->only(['tipe', 'rentang', 'search']))
-            ->with('success', "Kenaikan jabatan {$karyawan->nama_lengkap} ditolak & dijadwal ulang.");
+            ->with('success', "Pengajuan kenaikan golongan {$karyawan->nama_lengkap} ditolak.");
     }
 }

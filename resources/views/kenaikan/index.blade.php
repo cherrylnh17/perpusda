@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            ⏰ Jadwal Kenaikan Gaji & Jabatan
+            ⏰ Jadwal Kenaikan Berkala & Golongan
         </h2>
     </x-slot>
 
@@ -22,7 +22,7 @@
             {{-- ── Summary Cards ───────────────────────────────────────────── --}}
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
 
-                {{-- Card: Semua H-30 --}}
+                {{-- Card: Semua --}}
                 <a href="{{ route('kenaikan.index', ['tipe' => 'semua', 'rentang' => '30']) }}"
                    class="flex items-center gap-4 bg-white rounded-2xl border {{ $tipe === 'semua' && $rentang === '30' ? 'border-amber-400 ring-2 ring-amber-200' : 'border-gray-100' }} shadow-sm p-5 hover:shadow-md transition-shadow">
                     <div class="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center flex-shrink-0">
@@ -32,35 +32,35 @@
                     </div>
                     <div>
                         <p class="text-2xl font-bold text-gray-800">{{ $totalSemuaH30 }}</p>
-                        <p class="text-xs text-gray-500 mt-0.5">Kenaikan dalam H-30</p>
+                        <p class="text-xs text-gray-500 mt-0.5">Total Kenaikan H-30</p>
                     </div>
                 </a>
 
-                {{-- Card: Gaji H-30 --}}
-                <a href="{{ route('kenaikan.index', ['tipe' => 'gaji', 'rentang' => '30']) }}"
-                   class="flex items-center gap-4 bg-white rounded-2xl border {{ $tipe === 'gaji' && $rentang === '30' ? 'border-green-400 ring-2 ring-green-200' : 'border-gray-100' }} shadow-sm p-5 hover:shadow-md transition-shadow">
+                {{-- Card: Berkala H-30 --}}
+                <a href="{{ route('kenaikan.index', ['tipe' => 'berkala', 'rentang' => '30']) }}"
+                   class="flex items-center gap-4 bg-white rounded-2xl border {{ $tipe === 'berkala' && $rentang === '30' ? 'border-green-400 ring-2 ring-green-200' : 'border-gray-100' }} shadow-sm p-5 hover:shadow-md transition-shadow">
                     <div class="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center flex-shrink-0">
                         <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
                     </div>
                     <div>
-                        <p class="text-2xl font-bold text-gray-800">{{ $totalGajiH30 }}</p>
-                        <p class="text-xs text-gray-500 mt-0.5">Kenaikan Gaji H-30</p>
+                        <p class="text-2xl font-bold text-gray-800">{{ $totalBerkalaH30 }}</p>
+                        <p class="text-xs text-gray-500 mt-0.5">Kenaikan Berkala H-30</p>
                     </div>
                 </a>
 
-                {{-- Card: Jabatan H-30 --}}
-                <a href="{{ route('kenaikan.index', ['tipe' => 'jabatan', 'rentang' => '30']) }}"
-                   class="flex items-center gap-4 bg-white rounded-2xl border {{ $tipe === 'jabatan' && $rentang === '30' ? 'border-blue-400 ring-2 ring-blue-200' : 'border-gray-100' }} shadow-sm p-5 hover:shadow-md transition-shadow">
+                {{-- Card: Golongan Pending --}}
+                <a href="{{ route('kenaikan.index', ['tipe' => 'golongan', 'rentang' => 'semua']) }}"
+                   class="flex items-center gap-4 bg-white rounded-2xl border {{ $tipe === 'golongan' ? 'border-blue-400 ring-2 ring-blue-200' : 'border-gray-100' }} shadow-sm p-5 hover:shadow-md transition-shadow">
                     <div class="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center flex-shrink-0">
                         <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
                         </svg>
                     </div>
                     <div>
-                        <p class="text-2xl font-bold text-gray-800">{{ $totalJabatanH30 }}</p>
-                        <p class="text-xs text-gray-500 mt-0.5">Kenaikan Jabatan H-30</p>
+                        <p class="text-2xl font-bold text-gray-800">{{ $totalGolonganPending }}</p>
+                        <p class="text-xs text-gray-500 mt-0.5">Kenaikan Golongan Pending</p>
                     </div>
                 </a>
 
@@ -85,11 +85,11 @@
                         <select name="tipe" onchange="this.form.submit()"
                                 class="text-sm border border-gray-200 rounded-xl px-3 py-2.5 focus:ring-2 focus:ring-blue-500 outline-none text-gray-600 bg-white">
                             <option value="semua"   {{ $tipe === 'semua'   ? 'selected' : '' }}>⏰ Semua Kenaikan</option>
-                            <option value="gaji"    {{ $tipe === 'gaji'    ? 'selected' : '' }}>💰 Kenaikan Gaji</option>
-                            <option value="jabatan" {{ $tipe === 'jabatan' ? 'selected' : '' }}>📋 Kenaikan Jabatan</option>
+                            <option value="berkala" {{ $tipe === 'berkala' ? 'selected' : '' }}>💰 Kenaikan Berkala</option>
+                            <option value="golongan"{{ $tipe === 'golongan'? 'selected' : '' }}>🏅 Kenaikan Golongan</option>
                         </select>
 
-                        {{-- Filter Rentang --}}
+                        {{-- Filter Rentang (hanya relevan untuk berkala) --}}
                         <select name="rentang" onchange="this.form.submit()"
                                 class="text-sm border border-gray-200 rounded-xl px-3 py-2.5 focus:ring-2 focus:ring-blue-500 outline-none text-gray-600 bg-white">
                             <option value="7"     {{ $rentang === '7'     ? 'selected' : '' }}>H-7 (minggu ini)</option>
@@ -129,7 +129,7 @@
                             Filter H-{{ $rentang }} aktif
                         </span>
                         @endif
-                        <span class="text-gray-400">Diurutkan: jadwal terdekat</span>
+                        <span class="text-gray-400">Diurutkan: jadwal berkala terdekat</span>
                     </div>
                 </div>
 
@@ -140,42 +140,32 @@
                                 <th class="px-5 py-3 text-left w-10">#</th>
                                 <th class="px-5 py-3 text-left">Karyawan</th>
                                 <th class="px-5 py-3 text-left">NIP</th>
-                                <th class="px-5 py-3 text-left">Jabatan Sekarang</th>
-                                <th class="px-5 py-3 text-right">Gaji Sekarang</th>
-                                <th class="px-5 py-3 text-center">Kenaikan Gaji</th>
-                                <th class="px-5 py-3 text-center">Kenaikan Jabatan</th>
+                                <th class="px-5 py-3 text-left">Golongan</th>
+                                <th class="px-5 py-3 text-center">Kenaikan Berkala</th>
+                                <th class="px-5 py-3 text-center">Kenaikan Golongan</th>
                                 <th class="px-5 py-3 text-center">Aksi</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-50">
                             @forelse ($karyawans as $k)
                             @php
-                                $today      = now()->startOfDay();
-                                $batas30    = now()->addDays(30)->startOfDay();
-                                $batas7     = now()->addDays(7)->startOfDay();
+                                $today   = now()->startOfDay();
 
-                                $gajiDue    = $k->tanggal_kenaikan_gaji_berikutnya;
-                                $jabatanDue = $k->tanggal_kenaikan_jabatan_berikutnya;
+                                $berkalaDue  = $k->tanggal_berkala_berikutnya;
+                                $berkalaSisa = $berkalaDue ? (int) $today->diffInDays($berkalaDue, false) : null;
+                                $berkalaH7   = $berkalaSisa !== null && $berkalaSisa >= 0 && $berkalaSisa <= 7;
+                                $berkalaH30  = $berkalaSisa !== null && $berkalaSisa >= 0 && $berkalaSisa <= 30;
 
-                                $gajiSisa    = $gajiDue    ? (int) $today->diffInDays($gajiDue, false) : null;
-                                $jabatanSisa = $jabatanDue ? (int) $today->diffInDays($jabatanDue, false) : null;
+                                $golonganPending = $k->pengajuanGolonganPending;
+                                $hasPendingBerkala  = $k->pengajuanBerkalaPending !== null;
 
-                                $gajiH7  = $gajiSisa !== null && $gajiSisa >= 0 && $gajiSisa <= 7;
-                                $gajiH30 = $gajiSisa !== null && $gajiSisa >= 0 && $gajiSisa <= 30;
-
-                                $jabatanH7  = $jabatanSisa !== null && $jabatanSisa >= 0 && $jabatanSisa <= 7;
-                                $jabatanH30 = $jabatanSisa !== null && $jabatanSisa >= 0 && $jabatanSisa <= 30;
-
-                                // Warna baris: merah jika H-7, kuning jika H-30
+                                // Warna baris: merah H-7, kuning H-30, biru ada golongan pending
                                 $rowClass = '';
-                                if (($gajiH7 || $jabatanH7)) {
+                                if ($berkalaH7) {
                                     $rowClass = 'bg-red-50/40';
-                                } elseif (($gajiH30 || $jabatanH30)) {
+                                } elseif ($berkalaH30 || $golonganPending) {
                                     $rowClass = 'bg-amber-50/30';
                                 }
-
-                                $hasPendingGaji    = $k->kenaikanGajiPending !== null;
-                                $hasPendingJabatan = $k->kenaikanJabatanPending !== null;
                             @endphp
                             <tr class="hover:bg-gray-50/60 transition-colors group {{ $rowClass }}">
 
@@ -200,7 +190,7 @@
                                                class="font-medium text-gray-800 hover:text-blue-600 leading-tight">
                                                 {{ $k->nama_lengkap }}
                                             </a>
-                                            <p class="text-xs text-gray-400">{{ $k->golongan?->nama_golongan ?? '' }}</p>
+                                            <p class="text-xs text-gray-400">{{ $k->jabatan?->nama_jabatan ?? '-' }}</p>
                                         </div>
                                     </div>
                                 </td>
@@ -210,24 +200,26 @@
                                     {{ $k->nip }}
                                 </td>
 
-                                {{-- Jabatan --}}
+                                {{-- Golongan --}}
                                 <td class="px-5 py-3 text-gray-600 text-sm">
-                                    {{ $k->jabatan?->nama_jabatan ?? '-' }}
+                                    @if ($k->golongan)
+                                        <span class="inline-flex items-center gap-1">
+                                            <span class="font-semibold">{{ $k->golongan->nama_golongan }}</span>
+                                            <span class="text-xs text-gray-400">({{ $k->golongan->tipe }})</span>
+                                        </span>
+                                    @else
+                                        <span class="text-gray-300">—</span>
+                                    @endif
                                 </td>
 
-                                {{-- Gaji --}}
-                                <td class="px-5 py-3 text-right font-medium text-gray-700 text-xs whitespace-nowrap">
-                                    Rp {{ number_format($k->gaji, 0, ',', '.') }}
-                                </td>
-
-                                {{-- Kenaikan Gaji --}}
+                                {{-- Kenaikan Berkala --}}
                                 <td class="px-5 py-3 text-center">
-                                    @if ($gajiDue && $gajiSisa >= 0)
+                                    @if ($berkalaDue && $berkalaSisa >= 0)
                                         @php
-                                            if ($gajiH7) {
+                                            if ($berkalaH7) {
                                                 $badgeClass = 'bg-red-100 text-red-700 border border-red-200';
                                                 $ring = 'animate-pulse';
-                                            } elseif ($gajiH30) {
+                                            } elseif ($berkalaH30) {
                                                 $badgeClass = 'bg-green-100 text-green-700 border border-green-200';
                                                 $ring = '';
                                             } else {
@@ -237,46 +229,42 @@
                                         @endphp
                                         <div class="flex flex-col items-center gap-1">
                                             <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold {{ $badgeClass }} {{ $ring }}">
-                                                H-{{ $gajiSisa }}
+                                                H-{{ $berkalaSisa }}
                                             </span>
-                                            <span class="text-xs text-gray-400">{{ $gajiDue->format('d M Y') }}</span>
-                                            @if ($hasPendingGaji)
+                                            <span class="text-xs text-gray-400">{{ $berkalaDue->format('d M Y') }}</span>
+                                            @if ($hasPendingBerkala)
                                                 <span class="text-xs text-amber-600 font-semibold">⏳ Pending</span>
                                             @endif
                                         </div>
-                                    @elseif ($gajiDue && $gajiSisa < 0)
-                                        <span class="text-xs text-red-400 font-medium">Terlambat diproses</span>
+                                    @elseif ($berkalaDue && $berkalaSisa < 0)
+                                        <div class="flex flex-col items-center gap-1">
+                                            <span class="text-xs text-red-400 font-medium">Terlambat</span>
+                                            <span class="text-xs text-gray-400">{{ $berkalaDue->format('d M Y') }}</span>
+                                            @if ($hasPendingBerkala)
+                                                <span class="text-xs text-amber-600 font-semibold">⏳ Pending</span>
+                                            @endif
+                                        </div>
                                     @else
                                         <span class="text-xs text-gray-300">—</span>
                                     @endif
                                 </td>
 
-                                {{-- Kenaikan Jabatan --}}
+                                {{-- Kenaikan Golongan --}}
                                 <td class="px-5 py-3 text-center">
-                                    @if ($jabatanDue && $jabatanSisa >= 0)
-                                        @php
-                                            if ($jabatanH7) {
-                                                $badgeJClass = 'bg-red-100 text-red-700 border border-red-200';
-                                                $ringJ = 'animate-pulse';
-                                            } elseif ($jabatanH30) {
-                                                $badgeJClass = 'bg-blue-100 text-blue-700 border border-blue-200';
-                                                $ringJ = '';
-                                            } else {
-                                                $badgeJClass = 'bg-gray-100 text-gray-500';
-                                                $ringJ = '';
-                                            }
-                                        @endphp
+                                    @if ($golonganPending)
                                         <div class="flex flex-col items-center gap-1">
-                                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold {{ $badgeJClass }} {{ $ringJ }}">
-                                                H-{{ $jabatanSisa }}
+                                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-700 border border-blue-200">
+                                                Pending
                                             </span>
-                                            <span class="text-xs text-gray-400">{{ $jabatanDue->format('d M Y') }}</span>
-                                            @if ($hasPendingJabatan)
-                                                <span class="text-xs text-amber-600 font-semibold">⏳ Pending</span>
-                                            @endif
+                                            <span class="text-xs text-gray-500">
+                                                {{ $k->golongan?->nama_golongan ?? '-' }}
+                                                →
+                                                {{ $golonganPending->golonganBaru?->nama_golongan ?? '?' }}
+                                            </span>
+                                            <span class="text-xs text-gray-400">
+                                                Efektif: {{ $golonganPending->tanggal_efektif?->format('d M Y') ?? '-' }}
+                                            </span>
                                         </div>
-                                    @elseif ($jabatanDue && $jabatanSisa < 0)
-                                        <span class="text-xs text-red-400 font-medium">Terlambat diproses</span>
                                     @else
                                         <span class="text-xs text-gray-300">—</span>
                                     @endif
@@ -286,31 +274,42 @@
                                 <td class="px-5 py-3">
                                     <div class="flex items-center justify-center gap-2">
 
-                                        {{-- Tombol Approve/Reject Gaji --}}
-                                        @if ($gajiDue)
+                                        {{-- Tombol Proses Berkala --}}
+                                        @if ($berkalaDue)
                                         <button
                                             type="button"
-                                            title="Proses Kenaikan Gaji"
-                                            onclick="openModalGaji({{ $k->id }}, '{{ addslashes($k->nama_lengkap) }}', {{ $k->gaji }}, '{{ $gajiDue?->format('Y-m-d') }}', {{ $hasPendingGaji ? 'true' : 'false' }})"
+                                            title="Proses Kenaikan Berkala"
+                                            onclick="openModalBerkala(
+                                                {{ $k->id_karyawan }},
+                                                '{{ addslashes($k->nama_lengkap) }}',
+                                                '{{ $berkalaDue->format('Y-m-d') }}',
+                                                {{ $hasPendingBerkala ? 'true' : 'false' }}
+                                            )"
                                             class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-green-600 hover:bg-green-700 text-white transition-colors">
                                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                             </svg>
-                                            Gaji
+                                            Berkala
                                         </button>
                                         @endif
 
-                                        {{-- Tombol Approve/Reject Jabatan --}}
-                                        @if ($jabatanDue)
+                                        {{-- Tombol Proses Golongan --}}
+                                        @if ($golonganPending)
                                         <button
                                             type="button"
-                                            title="Proses Kenaikan Jabatan"
-                                            onclick="openModalJabatan({{ $k->id }}, '{{ addslashes($k->nama_lengkap) }}', '{{ addslashes($k->jabatan?->nama_jabatan ?? '') }}', '{{ $jabatanDue?->format('Y-m-d') }}', {{ $hasPendingJabatan ? 'true' : 'false' }})"
+                                            title="Proses Kenaikan Golongan"
+                                            onclick="openModalGolongan(
+                                                {{ $k->id_karyawan }},
+                                                '{{ addslashes($k->nama_lengkap) }}',
+                                                '{{ addslashes($k->golongan?->nama_golongan ?? '') }}',
+                                                '{{ $golonganPending->golongan_baru_id }}',
+                                                '{{ $golonganPending->tanggal_efektif?->format('Y-m-d') }}'
+                                            )"
                                             class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white transition-colors">
                                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
                                             </svg>
-                                            Jabatan
+                                            Golongan
                                         </button>
                                         @endif
 
@@ -319,7 +318,7 @@
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="8" class="px-6 py-16 text-center">
+                                <td colspan="7" class="px-6 py-16 text-center">
                                     <div class="flex flex-col items-center gap-3 text-gray-400">
                                         <svg class="w-12 h-12" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
@@ -346,18 +345,18 @@
 
 
     {{-- ══════════════════════════════════════════════════════════════════════
-         MODAL: Proses Kenaikan GAJI
+         MODAL: Proses Kenaikan BERKALA
     ══════════════════════════════════════════════════════════════════════ --}}
-    <div id="modalGaji" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+    <div id="modalBerkala" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg">
 
             {{-- Header --}}
             <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
                 <div>
-                    <h3 class="font-semibold text-gray-800">Proses Kenaikan Gaji</h3>
-                    <p id="modalGajiNama" class="text-xs text-gray-500 mt-0.5"></p>
+                    <h3 class="font-semibold text-gray-800">Proses Kenaikan Berkala</h3>
+                    <p id="modalBerkalaNama" class="text-xs text-gray-500 mt-0.5"></p>
                 </div>
-                <button onclick="closeModalGaji()"
+                <button onclick="closeModalBerkala()"
                         class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
@@ -365,47 +364,33 @@
                 </button>
             </div>
 
-            {{-- Info gaji sekarang --}}
-            <div class="mx-6 mt-4 p-3 bg-gray-50 rounded-xl flex items-center justify-between text-sm">
-                <span class="text-gray-500">Gaji Sekarang</span>
-                <span id="modalGajiSekarang" class="font-semibold text-gray-800"></span>
-            </div>
-
             {{-- Tab Approve / Reject --}}
             <div class="flex border-b border-gray-100 mx-6 mt-4 gap-0">
-                <button id="tabApproveGaji" onclick="switchGajiTab('approve')"
+                <button id="tabApproveBerkala" onclick="switchBerkalaTab('approve')"
                         class="flex-1 py-2.5 text-sm font-semibold text-center rounded-t-lg border-b-2 border-green-500 text-green-600 transition-colors">
-                    ✅ Approve
+                    ✅ Setujui
                 </button>
-                <button id="tabRejectGaji" onclick="switchGajiTab('reject')"
+                <button id="tabRejectBerkala" onclick="switchBerkalaTab('reject')"
                         class="flex-1 py-2.5 text-sm font-semibold text-center rounded-t-lg border-b-2 border-transparent text-gray-400 hover:text-gray-600 transition-colors">
                     ❌ Tolak & Jadwal Ulang
                 </button>
             </div>
 
-            {{-- Form Approve Gaji --}}
-            <form id="formApproveGaji" method="POST" action="" class="px-6 py-4 space-y-4">
+            {{-- Form Approve Berkala --}}
+            <form id="formApproveBerkala" method="POST" action="" class="px-6 py-4 space-y-4">
                 @csrf
-                @method('POST')
 
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-xs font-medium text-gray-600 mb-1.5">Gaji Baru <span class="text-red-500">*</span></label>
-                        <input type="number" name="gaji_baru" id="inputGajiBaru" min="0" step="1000" required
-                               class="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
-                               placeholder="Nominal gaji baru">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium text-gray-600 mb-1.5">Tanggal Berlaku <span class="text-red-500">*</span></label>
-                        <input type="date" name="tanggal_berlaku" id="inputGajiTglBerlaku" required
+                        <label class="block text-xs font-medium text-gray-600 mb-1.5">Tanggal Efektif <span class="text-red-500">*</span></label>
+                        <input type="date" name="tanggal_efektif" id="inputBerkalaTglEfektif" required
                                class="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none">
                     </div>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-medium text-gray-600 mb-1.5">Jadwal Kenaikan Berikutnya <span class="text-red-500">*</span></label>
-                    <input type="date" name="tanggal_berikutnya" required
-                           class="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1.5">Berkala Berikutnya <span class="text-red-500">*</span></label>
+                        <input type="date" name="tanggal_berikutnya" required
+                               class="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none">
+                    </div>
                 </div>
 
                 <div>
@@ -416,28 +401,27 @@
                 </div>
 
                 <div class="flex gap-3 pt-1">
-                    <button type="button" onclick="closeModalGaji()"
+                    <button type="button" onclick="closeModalBerkala()"
                             class="flex-1 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-xl transition-colors">
                         Batal
                     </button>
                     <button type="submit"
                             class="flex-1 py-2.5 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded-xl transition-colors">
-                        Approve Kenaikan
+                        Setujui Kenaikan
                     </button>
                 </div>
             </form>
 
-            {{-- Form Reject Gaji --}}
-            <form id="formRejectGaji" method="POST" action="" class="px-6 py-4 space-y-4 hidden">
+            {{-- Form Reject Berkala --}}
+            <form id="formRejectBerkala" method="POST" action="" class="px-6 py-4 space-y-4 hidden">
                 @csrf
-                @method('POST')
 
                 <div class="p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700">
-                    Kenaikan ditolak — gaji tidak berubah. Anda hanya menjadwal ulang tanggal kenaikan berikutnya.
+                    Kenaikan ditolak — jadwal berkala akan diperbarui ke tanggal baru.
                 </div>
 
                 <div>
-                    <label class="block text-xs font-medium text-gray-600 mb-1.5">Jadwal Kenaikan Berikutnya <span class="text-red-500">*</span></label>
+                    <label class="block text-xs font-medium text-gray-600 mb-1.5">Jadwal Berkala Berikutnya <span class="text-red-500">*</span></label>
                     <input type="date" name="tanggal_berikutnya" required
                            class="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-400 focus:border-transparent outline-none">
                 </div>
@@ -450,7 +434,7 @@
                 </div>
 
                 <div class="flex gap-3 pt-1">
-                    <button type="button" onclick="closeModalGaji()"
+                    <button type="button" onclick="closeModalBerkala()"
                             class="flex-1 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-xl transition-colors">
                         Batal
                     </button>
@@ -466,18 +450,18 @@
 
 
     {{-- ══════════════════════════════════════════════════════════════════════
-         MODAL: Proses Kenaikan JABATAN
+         MODAL: Proses Kenaikan GOLONGAN
     ══════════════════════════════════════════════════════════════════════ --}}
-    <div id="modalJabatan" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+    <div id="modalGolongan" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg">
 
             {{-- Header --}}
             <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
                 <div>
-                    <h3 class="font-semibold text-gray-800">Proses Kenaikan Jabatan</h3>
-                    <p id="modalJabatanNama" class="text-xs text-gray-500 mt-0.5"></p>
+                    <h3 class="font-semibold text-gray-800">Proses Kenaikan Golongan</h3>
+                    <p id="modalGolonganNama" class="text-xs text-gray-500 mt-0.5"></p>
                 </div>
-                <button onclick="closeModalJabatan()"
+                <button onclick="closeModalGolongan()"
                         class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
@@ -485,48 +469,47 @@
                 </button>
             </div>
 
-            {{-- Info jabatan sekarang --}}
+            {{-- Info golongan sekarang --}}
             <div class="mx-6 mt-4 p-3 bg-gray-50 rounded-xl flex items-center justify-between text-sm">
-                <span class="text-gray-500">Jabatan Sekarang</span>
-                <span id="modalJabatanSekarang" class="font-semibold text-gray-800"></span>
+                <span class="text-gray-500">Golongan Sekarang</span>
+                <span id="modalGolonganSekarang" class="font-semibold text-gray-800"></span>
             </div>
 
             {{-- Tab Approve / Reject --}}
             <div class="flex border-b border-gray-100 mx-6 mt-4 gap-0">
-                <button id="tabApproveJabatan" onclick="switchJabatanTab('approve')"
+                <button id="tabApproveGolongan" onclick="switchGolonganTab('approve')"
                         class="flex-1 py-2.5 text-sm font-semibold text-center rounded-t-lg border-b-2 border-blue-500 text-blue-600 transition-colors">
-                    ✅ Approve
+                    ✅ Setujui
                 </button>
-                <button id="tabRejectJabatan" onclick="switchJabatanTab('reject')"
+                <button id="tabRejectGolongan" onclick="switchGolonganTab('reject')"
                         class="flex-1 py-2.5 text-sm font-semibold text-center rounded-t-lg border-b-2 border-transparent text-gray-400 hover:text-gray-600 transition-colors">
-                    ❌ Tolak & Jadwal Ulang
+                    ❌ Tolak
                 </button>
             </div>
 
-            {{-- Form Approve Jabatan --}}
-            <form id="formApproveJabatan" method="POST" action="" class="px-6 py-4 space-y-4">
+            {{-- Form Approve Golongan --}}
+            <form id="formApproveGolongan" method="POST" action="" class="px-6 py-4 space-y-4">
                 @csrf
-                @method('POST')
 
                 <div>
-                    <label class="block text-xs font-medium text-gray-600 mb-1.5">Jabatan Baru <span class="text-red-500">*</span></label>
-                    <select name="jabatan_baru_id" required
+                    <label class="block text-xs font-medium text-gray-600 mb-1.5">Golongan Baru <span class="text-red-500">*</span></label>
+                    <select name="golongan_baru_id" id="selectGolonganBaru" required
                             class="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none bg-white">
-                        <option value="">-- Pilih jabatan baru --</option>
-                        @foreach ($jabatans as $jab)
-                        <option value="{{ $jab->id }}">{{ $jab->nama_jabatan }}</option>
+                        <option value="">-- Pilih golongan baru --</option>
+                        @foreach ($golongans as $gol)
+                        <option value="{{ $gol->id_golongan }}">{{ $gol->nama_golongan }} ({{ $gol->tipe }})</option>
                         @endforeach
                     </select>
                 </div>
 
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-xs font-medium text-gray-600 mb-1.5">Tanggal Berlaku <span class="text-red-500">*</span></label>
-                        <input type="date" name="tanggal_berlaku" id="inputJabatanTglBerlaku" required
+                        <label class="block text-xs font-medium text-gray-600 mb-1.5">Tanggal Efektif <span class="text-red-500">*</span></label>
+                        <input type="date" name="tanggal_efektif" id="inputGolonganTglEfektif" required
                                class="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none">
                     </div>
                     <div>
-                        <label class="block text-xs font-medium text-gray-600 mb-1.5">Jadwal Berikutnya <span class="text-red-500">*</span></label>
+                        <label class="block text-xs font-medium text-gray-600 mb-1.5">Berkala Berikutnya <span class="text-red-500">*</span></label>
                         <input type="date" name="tanggal_berikutnya" required
                                class="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none">
                     </div>
@@ -540,47 +523,40 @@
                 </div>
 
                 <div class="flex gap-3 pt-1">
-                    <button type="button" onclick="closeModalJabatan()"
+                    <button type="button" onclick="closeModalGolongan()"
                             class="flex-1 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-xl transition-colors">
                         Batal
                     </button>
                     <button type="submit"
                             class="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl transition-colors">
-                        Approve Kenaikan
+                        Setujui Kenaikan
                     </button>
                 </div>
             </form>
 
-            {{-- Form Reject Jabatan --}}
-            <form id="formRejectJabatan" method="POST" action="" class="px-6 py-4 space-y-4 hidden">
+            {{-- Form Reject Golongan --}}
+            <form id="formRejectGolongan" method="POST" action="" class="px-6 py-4 space-y-4 hidden">
                 @csrf
-                @method('POST')
 
                 <div class="p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700">
-                    Kenaikan ditolak — jabatan tidak berubah. Anda hanya menjadwal ulang tanggal kenaikan berikutnya.
-                </div>
-
-                <div>
-                    <label class="block text-xs font-medium text-gray-600 mb-1.5">Jadwal Kenaikan Berikutnya <span class="text-red-500">*</span></label>
-                    <input type="date" name="tanggal_berikutnya" required
-                           class="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-400 focus:border-transparent outline-none">
+                    Pengajuan kenaikan golongan akan ditolak. Golongan karyawan tidak berubah.
                 </div>
 
                 <div>
                     <label class="block text-xs font-medium text-gray-600 mb-1.5">Alasan Penolakan</label>
-                    <textarea name="catatan" rows="2" maxlength="500"
+                    <textarea name="catatan" rows="3" maxlength="500"
                               placeholder="Jelaskan alasan penolakan..."
                               class="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-400 focus:border-transparent outline-none resize-none"></textarea>
                 </div>
 
                 <div class="flex gap-3 pt-1">
-                    <button type="button" onclick="closeModalJabatan()"
+                    <button type="button" onclick="closeModalGolongan()"
                             class="flex-1 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-xl transition-colors">
                         Batal
                     </button>
                     <button type="submit"
                             class="flex-1 py-2.5 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-xl transition-colors">
-                        Tolak & Jadwal Ulang
+                        Tolak Pengajuan
                     </button>
                 </div>
             </form>
@@ -591,47 +567,37 @@
 
     {{-- ══ JavaScript ══════════════════════════════════════════════════════ --}}
     <script>
-    // ── Routes (dikirim dari PHP ke JS) ──────────────────────────────────────
-    const routeApproveGaji    = '{{ rtrim(url('/kenaikan'), '/') }}/__ID__/approve-gaji';
-    const routeRejectGaji     = '{{ rtrim(url('/kenaikan'), '/') }}/__ID__/reject-gaji';
-    const routeApproveJabatan = '{{ rtrim(url('/kenaikan'), '/') }}/__ID__/approve-jabatan';
-    const routeRejectJabatan  = '{{ rtrim(url('/kenaikan'), '/') }}/__ID__/reject-jabatan';
+    const routeApproveBerkala  = '{{ rtrim(url('/kenaikan'), '/') }}/__ID__/approve-berkala';
+    const routeRejectBerkala   = '{{ rtrim(url('/kenaikan'), '/') }}/__ID__/reject-berkala';
+    const routeApproveGolongan = '{{ rtrim(url('/kenaikan'), '/') }}/__ID__/approve-golongan';
+    const routeRejectGolongan  = '{{ rtrim(url('/kenaikan'), '/') }}/__ID__/reject-golongan';
 
     function makeUrl(template, id) {
         return template.replace('__ID__', id);
     }
 
-    function formatRupiah(angka) {
-        return 'Rp ' + parseInt(angka).toLocaleString('id-ID');
+    // ── Modal Berkala ─────────────────────────────────────────────────────────
+
+    function openModalBerkala(id, nama, tglBerkala, hasPending) {
+        document.getElementById('modalBerkalaNama').textContent = nama;
+        document.getElementById('inputBerkalaTglEfektif').value = tglBerkala;
+
+        document.getElementById('formApproveBerkala').action = makeUrl(routeApproveBerkala, id);
+        document.getElementById('formRejectBerkala').action  = makeUrl(routeRejectBerkala, id);
+
+        switchBerkalaTab('approve');
+        document.getElementById('modalBerkala').classList.remove('hidden');
     }
 
-    // ── Modal Gaji ────────────────────────────────────────────────────────────
-    let currentGajiKaryawanId = null;
-
-    function openModalGaji(id, nama, gajiSekarang, tglKenaikan, hasPending) {
-        currentGajiKaryawanId = id;
-        document.getElementById('modalGajiNama').textContent = nama;
-        document.getElementById('modalGajiSekarang').textContent = formatRupiah(gajiSekarang);
-        document.getElementById('inputGajiBaru').value = gajiSekarang;
-        document.getElementById('inputGajiTglBerlaku').value = tglKenaikan;
-
-        // Set action URLs
-        document.getElementById('formApproveGaji').action = makeUrl(routeApproveGaji, id);
-        document.getElementById('formRejectGaji').action  = makeUrl(routeRejectGaji, id);
-
-        switchGajiTab('approve');
-        document.getElementById('modalGaji').classList.remove('hidden');
+    function closeModalBerkala() {
+        document.getElementById('modalBerkala').classList.add('hidden');
     }
 
-    function closeModalGaji() {
-        document.getElementById('modalGaji').classList.add('hidden');
-    }
-
-    function switchGajiTab(tab) {
-        const approve = document.getElementById('formApproveGaji');
-        const reject  = document.getElementById('formRejectGaji');
-        const tabA    = document.getElementById('tabApproveGaji');
-        const tabR    = document.getElementById('tabRejectGaji');
+    function switchBerkalaTab(tab) {
+        const approve = document.getElementById('formApproveBerkala');
+        const reject  = document.getElementById('formRejectBerkala');
+        const tabA    = document.getElementById('tabApproveBerkala');
+        const tabR    = document.getElementById('tabRejectBerkala');
 
         if (tab === 'approve') {
             approve.classList.remove('hidden');
@@ -650,32 +616,33 @@
         }
     }
 
-    // ── Modal Jabatan ─────────────────────────────────────────────────────────
-    let currentJabatanKaryawanId = null;
+    // ── Modal Golongan ────────────────────────────────────────────────────────
 
-    function openModalJabatan(id, nama, jabatanSekarang, tglKenaikan, hasPending) {
-        currentJabatanKaryawanId = id;
-        document.getElementById('modalJabatanNama').textContent = nama;
-        document.getElementById('modalJabatanSekarang').textContent = jabatanSekarang || '-';
-        document.getElementById('inputJabatanTglBerlaku').value = tglKenaikan;
+    function openModalGolongan(id, nama, golonganSekarang, golonganBaruId, tglEfektif) {
+        document.getElementById('modalGolonganNama').textContent      = nama;
+        document.getElementById('modalGolonganSekarang').textContent  = golonganSekarang || '-';
+        document.getElementById('inputGolonganTglEfektif').value      = tglEfektif || '';
 
-        // Set action URLs
-        document.getElementById('formApproveJabatan').action = makeUrl(routeApproveJabatan, id);
-        document.getElementById('formRejectJabatan').action  = makeUrl(routeRejectJabatan, id);
+        // Preselect golongan baru sesuai pengajuan
+        const sel = document.getElementById('selectGolonganBaru');
+        if (golonganBaruId) sel.value = golonganBaruId;
 
-        switchJabatanTab('approve');
-        document.getElementById('modalJabatan').classList.remove('hidden');
+        document.getElementById('formApproveGolongan').action = makeUrl(routeApproveGolongan, id);
+        document.getElementById('formRejectGolongan').action  = makeUrl(routeRejectGolongan, id);
+
+        switchGolonganTab('approve');
+        document.getElementById('modalGolongan').classList.remove('hidden');
     }
 
-    function closeModalJabatan() {
-        document.getElementById('modalJabatan').classList.add('hidden');
+    function closeModalGolongan() {
+        document.getElementById('modalGolongan').classList.add('hidden');
     }
 
-    function switchJabatanTab(tab) {
-        const approve = document.getElementById('formApproveJabatan');
-        const reject  = document.getElementById('formRejectJabatan');
-        const tabA    = document.getElementById('tabApproveJabatan');
-        const tabR    = document.getElementById('tabRejectJabatan');
+    function switchGolonganTab(tab) {
+        const approve = document.getElementById('formApproveGolongan');
+        const reject  = document.getElementById('formRejectGolongan');
+        const tabA    = document.getElementById('tabApproveGolongan');
+        const tabR    = document.getElementById('tabRejectGolongan');
 
         if (tab === 'approve') {
             approve.classList.remove('hidden');
@@ -695,11 +662,11 @@
     }
 
     // ── Tutup modal jika klik backdrop ───────────────────────────────────────
-    document.getElementById('modalGaji').addEventListener('click', function (e) {
-        if (e.target === this) closeModalGaji();
+    document.getElementById('modalBerkala').addEventListener('click', function (e) {
+        if (e.target === this) closeModalBerkala();
     });
-    document.getElementById('modalJabatan').addEventListener('click', function (e) {
-        if (e.target === this) closeModalJabatan();
+    document.getElementById('modalGolongan').addEventListener('click', function (e) {
+        if (e.target === this) closeModalGolongan();
     });
     </script>
 

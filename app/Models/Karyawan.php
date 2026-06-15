@@ -3,18 +3,14 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Casts\Attribute;
-
-use App\Models\Jabatan;
-use App\Models\Pendidikan;
-use App\Models\JenisKontrak;
-use App\Models\Golongan;
-use App\Models\KenaikanGaji;
-use App\Models\KenaikanJabatan;
-use App\Models\NotifikasiKenaikan;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Karyawan extends Model
 {
+    protected $primaryKey = 'id_karyawan';
+
     protected $fillable = [
         'nama_lengkap',
         'nip',
@@ -25,120 +21,86 @@ class Karyawan extends Model
         'alamat',
         'agama',
         'golongan_darah',
-        'jabatan_id',
-        'pendidikan_id',
-        'jenis_kontrak_id',
-        'golongan_id',
-        'status_aktif',
-        'gaji',
-        'tanggal_mulai_jabatan',
         'foto',
-
-        // Kolom baru untuk countdown
-        'tanggal_kenaikan_gaji_berikutnya',
-        'tanggal_kenaikan_jabatan_berikutnya',
+        'id_jabatan',
+        'id_pendidikan',
+        'id_jenis_kontrak',
+        'id_golongan',
+        'status_aktif',
+        'tanggal_berkala_terakhir',
+        'tanggal_berkala_berikutnya',
+        'tanggal_mulai_golongan',
     ];
 
     protected $casts = [
-        'tanggal_lahir'                        => 'date',
-        'tanggal_masuk'                        => 'date',
-        'tanggal_mulai_jabatan'                => 'date',
-        'gaji'                                 => 'decimal:2',
-        'tanggal_kenaikan_gaji_berikutnya'     => 'date',
-        'tanggal_kenaikan_jabatan_berikutnya'  => 'date',
+        'tanggal_lahir'              => 'date',
+        'tanggal_masuk'              => 'date',
+        'tanggal_mulai_golongan'      => 'date',
+        'tanggal_berkala_terakhir'   => 'date',
+        'tanggal_berkala_berikutnya' => 'date',
     ];
 
-    // ── Relasi Master ────────────────────────────────────────────────────────
+    // ─── Relations ───────────────────────────────────────────────
 
-    public function jabatan()
+    public function jabatan(): BelongsTo
     {
-        return $this->belongsTo(Jabatan::class);
+        return $this->belongsTo(Jabatan::class, 'id_jabatan', 'id_jabatan');
     }
 
-    public function pendidikan()
+    public function pendidikan(): BelongsTo
     {
-        return $this->belongsTo(Pendidikan::class);
+        return $this->belongsTo(Pendidikan::class, 'id_pendidikan', 'id_pendidikan');
     }
 
-    public function jenisKontrak()
+    public function jenisKontrak(): BelongsTo
     {
-        return $this->belongsTo(JenisKontrak::class);
+        return $this->belongsTo(JenisKontrak::class, 'id_jenis_kontrak', 'id_jenis_kontrak');
     }
 
-    public function golongan()
+    public function golongan(): BelongsTo
     {
-        return $this->belongsTo(Golongan::class);
+        return $this->belongsTo(Golongan::class, 'id_golongan', 'id_golongan');
     }
 
-    // ── Relasi Kenaikan ──────────────────────────────────────────────────────
-
-    public function kenaikanGajis()
+    public function pengajuanBerkalas(): HasMany
     {
-        return $this->hasMany(KenaikanGaji::class);
+        return $this->hasMany(PengajuanKenaikanBerkala::class, 'id_karyawan', 'id_karyawan');
     }
 
-    public function kenaikanJabatans()
+    /** Pengajuan berkala yang sedang pending (max 1) */
+    public function pengajuanBerkalaPending(): HasOne
     {
-        return $this->hasMany(KenaikanJabatan::class);
+        return $this->hasOne(PengajuanKenaikanBerkala::class, 'id_karyawan', 'id_karyawan')
+            ->where('status', 'pending');
     }
 
-    public function notifikasiKenaikans()
+    public function pengajuanGolongans(): HasMany
     {
-        return $this->hasMany(NotifikasiKenaikan::class);
+        return $this->hasMany(PengajuanKenaikanGolongan::class, 'id_karyawan', 'id_karyawan');
     }
 
-    // ── Accessor: pengajuan kenaikan gaji yang masih pending ────────────────
-
-    public function kenaikanGajiPending()
+    /** Pengajuan golongan yang sedang pending (max 1) */
+    public function pengajuanGolonganPending(): HasOne
     {
-        return $this->hasOne(KenaikanGaji::class)
-                    ->where('status', 'pending')
-                    ->latestOfMany();
+        return $this->hasOne(PengajuanKenaikanGolongan::class, 'id_karyawan', 'id_karyawan')
+            ->where('status', 'pending');
     }
 
-    public function kenaikanJabatanPending()
+    public function historiGolongans(): HasMany
     {
-        return $this->hasOne(KenaikanJabatan::class)
-                    ->where('status', 'pending')
-                    ->latestOfMany();
+        return $this->hasMany(HistoriGolongan::class, 'id_karyawan', 'id_karyawan')
+            ->orderByDesc('tanggal_efektif');
     }
 
-    // ── Accessor: URL foto ───────────────────────────────────────────────────
+    // ─── Helpers ─────────────────────────────────────────────────
 
-    public function fotoUrl(): Attribute
+    /** Apakah karyawan sudah memenuhi syarat kenaikan berkala */
+    public function sudahJatuhTempoBerkala(): bool
     {
-        return Attribute::make(
-            get: fn () => $this->foto
-                ? asset('storage/' . $this->foto)
-                : null,
-        );
-    }
+        if (! $this->tanggal_berkala_berikutnya) {
+            return false;
+        }
 
-    // ── Accessor: hitung sisa hari kenaikan gaji ────────────────────────────
-
-    public function sisaHariKenaikanGaji(): Attribute
-    {
-        return Attribute::make(
-            get: fn () => $this->tanggal_kenaikan_gaji_berikutnya
-                ? now()->startOfDay()->diffInDays(
-                    $this->tanggal_kenaikan_gaji_berikutnya,
-                    absolute: false
-                  )
-                : null,
-        );
-    }
-
-    // ── Accessor: hitung sisa hari kenaikan jabatan ─────────────────────────
-
-    public function sisaHariKenaikanJabatan(): Attribute
-    {
-        return Attribute::make(
-            get: fn () => $this->tanggal_kenaikan_jabatan_berikutnya
-                ? now()->startOfDay()->diffInDays(
-                    $this->tanggal_kenaikan_jabatan_berikutnya,
-                    absolute: false
-                  )
-                : null,
-        );
+        return now()->gte($this->tanggal_berkala_berikutnya);
     }
 }

@@ -19,7 +19,10 @@ class KaryawanController extends Controller
 
     public function index(Request $request)
     {
-        $query = Karyawan::with(['jabatan', 'pendidikan', 'jenisKontrak', 'golongan']);
+        $query = Karyawan::with([
+            'jabatan', 'pendidikan', 'jenisKontrak', 'golongan',
+            'pengajuanGolonganPending.golonganBaru',
+        ]);
 
         if ($request->filled('search')) {
             $s = $request->search;
@@ -30,23 +33,24 @@ class KaryawanController extends Controller
             });
         }
 
-        if ($request->filled('status'))   $query->where('status_aktif',    $request->status);
-        if ($request->filled('jabatan'))  $query->where('jabatan_id',       $request->jabatan);
-        if ($request->filled('kontrak'))  $query->where('jenis_kontrak_id', $request->kontrak);
-        if ($request->filled('golongan')) $query->where('golongan_id',      $request->golongan);
+        if ($request->filled('status'))   $query->where('status_aktif',     $request->status);
+        if ($request->filled('jabatan'))  $query->where('id_jabatan',       $request->jabatan);
+        if ($request->filled('kontrak'))  $query->where('id_jenis_kontrak', $request->kontrak);
+        if ($request->filled('golongan')) $query->where('id_golongan',      $request->golongan);
 
-        // Filter karyawan yang mendekati kenaikan (H-30) untuk badge di index
+        // Filter karyawan yang mendekati/menunggu kenaikan (untuk badge di index)
         if ($request->filled('kenaikan')) {
             $batas = now()->addDays(30)->toDateString();
             $today = now()->toDateString();
-            if ($request->kenaikan === 'gaji') {
-                $query->whereBetween('tanggal_kenaikan_gaji_berikutnya', [$today, $batas]);
-            } elseif ($request->kenaikan === 'jabatan') {
-                $query->whereBetween('tanggal_kenaikan_jabatan_berikutnya', [$today, $batas]);
+
+            if ($request->kenaikan === 'berkala') {
+                $query->whereBetween('tanggal_berkala_berikutnya', [$today, $batas]);
+            } elseif ($request->kenaikan === 'golongan') {
+                $query->whereHas('pengajuanGolonganPending');
             } elseif ($request->kenaikan === 'semua') {
                 $query->where(function ($q) use ($today, $batas) {
-                    $q->whereBetween('tanggal_kenaikan_gaji_berikutnya', [$today, $batas])
-                      ->orWhereBetween('tanggal_kenaikan_jabatan_berikutnya', [$today, $batas]);
+                    $q->whereBetween('tanggal_berkala_berikutnya', [$today, $batas])
+                      ->orWhereHas('pengajuanGolonganPending');
                 });
             }
         }
@@ -56,13 +60,13 @@ class KaryawanController extends Controller
         $kontraks  = JenisKontrak::orderBy('nama_kontrak')->get();
         $golongans = Golongan::orderBy('tipe')->orderBy('nama_golongan')->get();
 
-        // Hitung total karyawan yang mendekati kenaikan (untuk badge notif di toolbar)
+        // Hitung total karyawan yang mendekati/menunggu kenaikan (badge notif di toolbar)
         $batas = now()->addDays(30)->toDateString();
         $today = now()->toDateString();
         $totalMendekatiKenaikan = Karyawan::where('status_aktif', 'Aktif')
             ->where(function ($q) use ($today, $batas) {
-                $q->whereBetween('tanggal_kenaikan_gaji_berikutnya', [$today, $batas])
-                  ->orWhereBetween('tanggal_kenaikan_jabatan_berikutnya', [$today, $batas]);
+                $q->whereBetween('tanggal_berkala_berikutnya', [$today, $batas])
+                  ->orWhereHas('pengajuanGolonganPending');
             })->count();
 
         return view('karyawan.index', compact(
@@ -107,9 +111,13 @@ class KaryawanController extends Controller
             'pendidikan',
             'jenisKontrak',
             'golongan',
-            'kenaikanGajis'   => fn ($q) => $q->orderByDesc('tanggal_berlaku')->limit(5),
-            'kenaikanJabatans' => fn ($q) => $q->with(['jabatanLama', 'jabatanBaru'])
-                                               ->orderByDesc('tanggal_berlaku')->limit(5),
+            'pengajuanBerkalaPending',
+            'pengajuanGolonganPending' => fn ($q) => $q->with(['golonganLama', 'golonganBaru']),
+            'pengajuanBerkalas'  => fn ($q) => $q->orderByDesc('tanggal_efektif')
+                                                  ->with('diprosesByUser')
+                                                  ->limit(5),
+            'historiGolongans'   => fn ($q) => $q->with(['golonganLama', 'golonganBaru', 'dicatatByUser'])
+                                                  ->limit(5),
         ]);
 
         return view('karyawan.show', compact('karyawan'));
@@ -131,7 +139,7 @@ class KaryawanController extends Controller
 
     public function update(Request $request, Karyawan $karyawan)
     {
-        $validated = $request->validate($this->rules($karyawan->id));
+        $validated = $request->validate($this->rules($karyawan->id_karyawan));
 
         if ($request->hasFile('foto')) {
             if ($karyawan->foto) Storage::disk('public')->delete($karyawan->foto);
@@ -204,9 +212,9 @@ class KaryawanController extends Controller
                 'tanggal_lahir', 'jabatan', 'pendidikan', 'jenis_kontrak',
                 'golongan',
                 'tgl_masuk', 'tgl_mulai_jabatan', 'agama',
-                'golongan_darah', 'status', 'gaji', 'alamat',
-                'tgl_kenaikan_gaji',    // Tanggal kenaikan gaji berikutnya (d/m/Y)
-                'tgl_kenaikan_jabatan', // Tanggal kenaikan jabatan berikutnya (d/m/Y)
+                'golongan_darah', 'status', 'alamat',
+                'tgl_berkala_terakhir',   // Tanggal kenaikan berkala terakhir (d/m/Y)
+                'tgl_berkala_berikutnya', // Tanggal kenaikan berkala berikutnya (d/m/Y)
             ]);
 
             $writer->addRow([
@@ -214,8 +222,8 @@ class KaryawanController extends Controller
                 '25/01/1985', 'Staff IT', 'S1', 'Pegawai Tetap',
                 'III/a',
                 '01/01/2010', '01/03/2010', 'Islam',
-                'O', 'Aktif', '5000000', 'Jl. Merdeka No. 1, Kudus',
-                '01/01/2026', '01/03/2026',
+                'O', 'Aktif', 'Jl. Merdeka No. 1, Kudus',
+                '01/01/2024', '01/01/2026',
             ]);
 
             $writer->close();
@@ -232,8 +240,8 @@ class KaryawanController extends Controller
         $query = Karyawan::with(['jabatan', 'pendidikan', 'jenisKontrak', 'golongan']);
 
         if ($request->filled('status'))   $query->where('status_aktif', $request->status);
-        if ($request->filled('jabatan'))  $query->where('jabatan_id',   $request->jabatan);
-        if ($request->filled('golongan')) $query->where('golongan_id',  $request->golongan);
+        if ($request->filled('jabatan'))  $query->where('id_jabatan',   $request->jabatan);
+        if ($request->filled('golongan')) $query->where('id_golongan',  $request->golongan);
 
         $karyawans = $query->orderBy('nama_lengkap')->get();
 
@@ -271,28 +279,27 @@ class KaryawanController extends Controller
     private function rules(?int $ignoreId = null): array
     {
         return [
-            'nama_lengkap'                       => 'required|string|max:255',
-            'nip'                                => ['required', 'string', 'max:50',
-                                                    Rule::unique('karyawans', 'nip')->ignore($ignoreId)],
-            'nik'                                => ['required', 'string', 'max:20',
-                                                    Rule::unique('karyawans', 'nik')->ignore($ignoreId)],
-            'jenis_kelamin'                      => 'nullable|in:Laki-laki,Perempuan',
-            'tanggal_lahir'                      => 'nullable|date|before:today',
-            'tanggal_masuk'                      => 'required|date',
-            'tanggal_mulai_jabatan'              => 'required|date',
-            'alamat'                             => 'nullable|string',
-            'agama'                              => 'nullable|string|max:50',
-            'golongan_darah'                     => 'nullable|string|max:2',
-            'jabatan_id'                         => 'nullable|exists:jabatans,id',
-            'pendidikan_id'                      => 'nullable|exists:pendidikans,id',
-            'jenis_kontrak_id'                   => 'nullable|exists:jenis_kontraks,id',
-            'golongan_id'                        => 'nullable|exists:golongans,id',
-            'status_aktif'                       => 'required|in:Aktif,Cuti,Pensiun,Resign',
-            'gaji'                               => 'required|numeric|min:0',
-            'foto'                               => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
-            // Kolom baru
-            'tanggal_kenaikan_gaji_berikutnya'   => 'nullable|date',
-            'tanggal_kenaikan_jabatan_berikutnya' => 'nullable|date',
+            'nama_lengkap'           => 'required|string|max:255',
+            'nip'                    => ['required', 'string', 'max:50',
+                                          Rule::unique('karyawans', 'nip')->ignore($ignoreId, 'id_karyawan')],
+            'nik'                    => ['required', 'string', 'max:20',
+                                          Rule::unique('karyawans', 'nik')->ignore($ignoreId, 'id_karyawan')],
+            'jenis_kelamin'          => 'nullable|in:Laki-laki,Perempuan',
+            'tanggal_lahir'          => 'nullable|date|before:today',
+            'tanggal_masuk'          => 'required|date',
+            'tanggal_mulai_golongan' => 'required|date',
+            'alamat'                 => 'nullable|string',
+            'agama'                  => 'nullable|string|max:50',
+            'golongan_darah'         => 'nullable|string|max:2',
+            'id_jabatan'             => 'nullable|exists:jabatans,id_jabatan',
+            'id_pendidikan'          => 'nullable|exists:pendidikans,id_pendidikan',
+            'id_jenis_kontrak'       => 'nullable|exists:jenis_kontraks,id_jenis_kontrak',
+            'id_golongan'            => 'nullable|exists:golongans,id_golongan',
+            'status_aktif'           => 'required|in:Aktif,Pensiun',
+            'foto'                   => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+            // Jadwal kenaikan berkala
+            'tanggal_berkala_terakhir'   => 'nullable|date',
+            'tanggal_berkala_berikutnya' => 'nullable|date',
         ];
     }
 }

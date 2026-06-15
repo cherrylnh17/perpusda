@@ -15,41 +15,32 @@ class DashboardController extends Controller
     public function index()
     {
         // ── Statistik utama ──────────────────────────────────────────────────
-        $totalKaryawan     = Karyawan::count();
-        $karyawanAktif     = Karyawan::where('status_aktif', 'Aktif')->count();
-        $karyawanCuti      = Karyawan::where('status_aktif', 'Cuti')->count();
-        $karyawanPensiun   = Karyawan::where('status_aktif', 'Pensiun')->count();
-        $karyawanResign    = Karyawan::where('status_aktif', 'Resign')->count();
+        $totalKaryawan   = Karyawan::count();
+        $karyawanAktif   = Karyawan::where('status_aktif', 'Aktif')->count();
+        $karyawanPensiun = Karyawan::where('status_aktif', 'Pensiun')->count();
 
         $totalJabatan      = Jabatan::count();
         $totalPendidikan   = Pendidikan::count();
         $totalJenisKontrak = JenisKontrak::count();
 
-        // ── Total & rata-rata gaji (hanya karyawan Aktif) ───────────────────
-        $totalGaji    = Karyawan::where('status_aktif', 'Aktif')->sum('gaji');
-        $rataRataGaji = Karyawan::where('status_aktif', 'Aktif')->avg('gaji') ?? 0;
-
         // ── Distribusi karyawan per jabatan (top 6) ─────────────────────────
-        // Menggunakan foreign key default Laravel: jabatan_id
         $karyawanPerJabatan = Karyawan::select('jabatans.nama_jabatan', DB::raw('COUNT(*) as total'))
-            ->join('jabatans', 'karyawans.jabatan_id', '=', 'jabatans.id')
+            ->join('jabatans', 'karyawans.id_jabatan', '=', 'jabatans.id_jabatan')
             ->groupBy('jabatans.nama_jabatan')
             ->orderByDesc('total')
             ->limit(6)
             ->get();
 
         // ── Distribusi karyawan per pendidikan ──────────────────────────────
-        // Menggunakan foreign key default Laravel: pendidikan_id
         $karyawanPerPendidikan = Karyawan::select('pendidikans.nama_pendidikan', DB::raw('COUNT(*) as total'))
-            ->join('pendidikans', 'karyawans.pendidikan_id', '=', 'pendidikans.id')
+            ->join('pendidikans', 'karyawans.id_pendidikan', '=', 'pendidikans.id_pendidikan')
             ->groupBy('pendidikans.nama_pendidikan')
             ->orderByDesc('total')
             ->get();
 
         // ── Distribusi karyawan per jenis kontrak ───────────────────────────
-        // Menggunakan foreign key default Laravel: jenis_kontrak_id
         $karyawanPerKontrak = Karyawan::select('jenis_kontraks.nama_kontrak', DB::raw('COUNT(*) as total'))
-            ->join('jenis_kontraks', 'karyawans.jenis_kontrak_id', '=', 'jenis_kontraks.id')
+            ->join('jenis_kontraks', 'karyawans.id_jenis_kontrak', '=', 'jenis_kontraks.id_jenis_kontrak')
             ->groupBy('jenis_kontraks.nama_kontrak')
             ->orderByDesc('total')
             ->get();
@@ -82,49 +73,53 @@ class DashboardController extends Controller
             ->count();
 
         // ── Distribusi jenis kontrak per gender ──────────────────────────────
-        // Laki-laki: per jenis kontrak
         $kontrakLaki = Karyawan::select('jenis_kontraks.nama_kontrak', DB::raw('COUNT(*) as total'))
-            ->join('jenis_kontraks', 'karyawans.jenis_kontrak_id', '=', 'jenis_kontraks.id')
+            ->join('jenis_kontraks', 'karyawans.id_jenis_kontrak', '=', 'jenis_kontraks.id_jenis_kontrak')
             ->where('karyawans.jenis_kelamin', 'Laki-laki')
             ->groupBy('jenis_kontraks.nama_kontrak')
             ->orderByDesc('total')
             ->get();
 
-        // Perempuan: per jenis kontrak
         $kontrakPerempuan = Karyawan::select('jenis_kontraks.nama_kontrak', DB::raw('COUNT(*) as total'))
-            ->join('jenis_kontraks', 'karyawans.jenis_kontrak_id', '=', 'jenis_kontraks.id')
+            ->join('jenis_kontraks', 'karyawans.id_jenis_kontrak', '=', 'jenis_kontraks.id_jenis_kontrak')
             ->where('karyawans.jenis_kelamin', 'Perempuan')
             ->groupBy('jenis_kontraks.nama_kontrak')
             ->orderByDesc('total')
             ->get();
 
-        // ── 5 Karyawan aktif dengan kenaikan gaji H-30 terdekat ─────────────
+        // ── 5 Karyawan aktif dengan kenaikan berkala H-30 terdekat ──────────
+        // Berdasarkan tanggal_berkala_berikutnya di tabel karyawans
         $today = Carbon::today();
         $batas = $today->copy()->addDays(30);
 
-        $karyawanNaikGaji = Karyawan::with(['jabatan'])
+        $karyawanNaikBerkala = Karyawan::with(['jabatan'])
             ->where('status_aktif', 'Aktif')
-            ->whereNotNull('tanggal_kenaikan_gaji_berikutnya')
-            ->whereBetween('tanggal_kenaikan_gaji_berikutnya', [$today, $batas])
-            ->orderBy('tanggal_kenaikan_gaji_berikutnya')
+            ->whereNotNull('tanggal_berkala_berikutnya')
+            ->whereBetween('tanggal_berkala_berikutnya', [$today, $batas])
+            ->orderBy('tanggal_berkala_berikutnya')
             ->limit(5)
             ->get();
 
-        // ── 5 Karyawan aktif dengan kenaikan jabatan H-30 terdekat ──────────
-        $karyawanNaikJabatan = Karyawan::with(['jabatan'])
+        // ── 5 Karyawan aktif dengan pengajuan kenaikan golongan pending ───────
+        // Diambil dari tabel pengajuan_kenaikan_golongans (status pending),
+        // diurutkan berdasarkan tanggal_efektif terdekat
+        $karyawanNaikGolongan = Karyawan::with(['jabatan', 'golongan', 'pengajuanGolonganPending.golonganBaru'])
             ->where('status_aktif', 'Aktif')
-            ->whereNotNull('tanggal_kenaikan_jabatan_berikutnya')
-            ->whereBetween('tanggal_kenaikan_jabatan_berikutnya', [$today, $batas])
-            ->orderBy('tanggal_kenaikan_jabatan_berikutnya')
+            ->whereHas('pengajuanGolonganPending')
+            ->orderBy(
+                \App\Models\PengajuanKenaikanGolongan::select('tanggal_efektif')
+                    ->whereColumn('id_karyawan', 'karyawans.id_karyawan')
+                    ->where('status', 'pending')
+                    ->limit(1),
+                'asc'
+            )
             ->limit(5)
             ->get();
 
         return view('dashboard', compact(
             'totalKaryawan',
             'karyawanAktif',
-            'karyawanCuti',
             'karyawanPensiun',
-            'karyawanResign',
             'totalJabatan',
             'totalPendidikan',
             'totalJenisKontrak',
@@ -140,8 +135,8 @@ class DashboardController extends Controller
             'pppkPerempuan',
             'kontrakLaki',
             'kontrakPerempuan',
-            'karyawanNaikGaji',
-            'karyawanNaikJabatan',
+            'karyawanNaikBerkala',
+            'karyawanNaikGolongan',
         ));
     }
 }

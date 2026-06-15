@@ -39,7 +39,7 @@
                     </span>
                     <p class="text-sm text-amber-800 font-medium">
                         <span class="font-bold">{{ $totalMendekatiKenaikan }} karyawan</span>
-                        memiliki jadwal kenaikan dalam 30 hari ke depan.
+                        memiliki jadwal/pengajuan kenaikan dalam 30 hari ke depan.
                     </p>
                 </div>
                 <a href="{{ route('karyawan.index', array_merge(request()->query(), ['kenaikan' => 'semua'])) }}"
@@ -78,7 +78,7 @@
                                 class="text-sm border border-gray-200 rounded-xl px-3 py-2.5 focus:ring-2 focus:ring-blue-500 outline-none text-gray-600 bg-white">
                             <option value="">Semua Jabatan</option>
                             @foreach ($jabatans as $j)
-                            <option value="{{ $j->id }}" {{ request('jabatan') == $j->id ? 'selected' : '' }}>
+                            <option value="{{ $j->id_jabatan }}" {{ request('jabatan') == $j->id_jabatan ? 'selected' : '' }}>
                                 {{ $j->nama_jabatan }}
                             </option>
                             @endforeach
@@ -89,7 +89,7 @@
                                 class="text-sm border border-gray-200 rounded-xl px-3 py-2.5 focus:ring-2 focus:ring-blue-500 outline-none text-gray-600 bg-white">
                             <option value="">Semua Kontrak</option>
                             @foreach ($kontraks as $k)
-                            <option value="{{ $k->id }}" {{ request('kontrak') == $k->id ? 'selected' : '' }}>
+                            <option value="{{ $k->id_jenis_kontrak }}" {{ request('kontrak') == $k->id_jenis_kontrak ? 'selected' : '' }}>
                                 {{ $k->nama_kontrak }}
                             </option>
                             @endforeach
@@ -102,7 +102,7 @@
                             @foreach ($golongans->groupBy('tipe') as $tipe => $items)
                                 <optgroup label="{{ $tipe }}">
                                     @foreach ($items as $g)
-                                    <option value="{{ $g->id }}" {{ request('golongan') == $g->id ? 'selected' : '' }}>
+                                    <option value="{{ $g->id_golongan }}" {{ request('golongan') == $g->id_golongan ? 'selected' : '' }}>
                                         {{ $g->nama_golongan }}
                                     </option>
                                     @endforeach
@@ -114,9 +114,9 @@
                         <select name="kenaikan" onchange="this.form.submit()"
                                 class="text-sm border border-gray-200 rounded-xl px-3 py-2.5 focus:ring-2 focus:ring-amber-500 outline-none text-gray-600 bg-white {{ request('kenaikan') ? 'border-amber-400 bg-amber-50 text-amber-700 font-semibold' : '' }}">
                             <option value="">Semua Kenaikan</option>
-                            <option value="semua"    {{ request('kenaikan') == 'semua'   ? 'selected' : '' }}>⏰ H-30 Semua</option>
-                            <option value="gaji"     {{ request('kenaikan') == 'gaji'    ? 'selected' : '' }}>💰 H-30 Gaji</option>
-                            <option value="jabatan"  {{ request('kenaikan') == 'jabatan' ? 'selected' : '' }}>📋 H-30 Jabatan</option>
+                            <option value="semua"    {{ request('kenaikan') == 'semua'    ? 'selected' : '' }}>⏰ H-30 Semua</option>
+                            <option value="berkala"  {{ request('kenaikan') == 'berkala'  ? 'selected' : '' }}>🗓️ H-30 Berkala</option>
+                            <option value="golongan" {{ request('kenaikan') == 'golongan' ? 'selected' : '' }}>📈 Pengajuan Golongan</option>
                         </select>
 
                         {{-- Tombol Search --}}
@@ -145,37 +145,37 @@
                         Tambah Karyawan
                     </a>
 
-                    <a href="{{ route('karyawan.export.excel', request()->query()) }}"
+                    {{-- <a href="{{ route('karyawan.export.excel', request()->query()) }}"
                        class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-xl transition-colors">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                         </svg>
                         Export Excel
-                    </a>
+                    </a> --}}
 
-                    <a href="{{ route('karyawan.export.pdf', request()->query()) }}" target="_blank"
+                    {{-- <a href="{{ route('karyawan.export.pdf', request()->query()) }}" target="_blank"
                        class="inline-flex items-center gap-2 px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-sm font-medium rounded-xl transition-colors">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
                         </svg>
                         Export PDF
-                    </a>
+                    </a> --}}
 
-                    <button onclick="document.getElementById('modalImport').classList.remove('hidden')"
+                    {{-- <button onclick="document.getElementById('modalImport').classList.remove('hidden')"
                             class="inline-flex items-center gap-2 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-sm font-medium rounded-xl transition-colors">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
                         </svg>
                         Import Excel
-                    </button>
+                    </button> --}}
 
-                    <a href="{{ route('karyawan.template') }}"
+                    {{-- <a href="{{ route('karyawan.template') }}"
                        class="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-600 text-sm font-medium rounded-xl transition-colors">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
                         </svg>
                         Template Import
-                    </a>
+                    </a> --}}
                 </div>
             </div>
 
@@ -190,7 +190,7 @@
                     @if (request('kenaikan'))
                     <span class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-amber-100 text-amber-700 rounded-full text-xs font-semibold">
                         <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
-                        Filter H-30 Aktif
+                        Filter Kenaikan Aktif
                     </span>
                     @endif
                 </div>
@@ -206,7 +206,6 @@
                                 <th class="px-5 py-3 text-left">Kontrak</th>
                                 <th class="px-5 py-3 text-left">Golongan</th>
                                 <th class="px-5 py-3 text-left">Tgl Masuk</th>
-                                <th class="px-5 py-3 text-right">Gaji</th>
                                 <th class="px-5 py-3 text-center">Kenaikan</th>
                                 <th class="px-5 py-3 text-center">Status</th>
                                 <th class="px-5 py-3 text-center">Aksi</th>
@@ -218,16 +217,13 @@
                                 $today = now()->startOfDay();
                                 $batas30 = now()->addDays(30)->startOfDay();
 
-                                $gajiDue    = $k->tanggal_kenaikan_gaji_berikutnya;
-                                $jabatanDue = $k->tanggal_kenaikan_jabatan_berikutnya;
+                                $berkalaDue  = $k->tanggal_berkala_berikutnya;
+                                $berkalaH30  = $berkalaDue && $berkalaDue->gte($today) && $berkalaDue->lte($batas30);
+                                $berkalaSisa = $berkalaDue ? $today->diffInDays($berkalaDue, false) : null;
 
-                                $gajiH30    = $gajiDue    && $gajiDue->gte($today)    && $gajiDue->lte($batas30);
-                                $jabatanH30 = $jabatanDue && $jabatanDue->gte($today) && $jabatanDue->lte($batas30);
-
-                                $gajiSisa    = $gajiDue    ? $today->diffInDays($gajiDue, false)    : null;
-                                $jabatanSisa = $jabatanDue ? $today->diffInDays($jabatanDue, false) : null;
+                                $golonganPending = $k->pengajuanGolonganPending;
                             @endphp
-                            <tr class="hover:bg-gray-50/60 transition-colors group {{ ($gajiH30 || $jabatanH30) ? 'bg-amber-50/30' : '' }}">
+                            <tr class="hover:bg-gray-50/60 transition-colors group {{ ($berkalaH30 || $golonganPending) ? 'bg-amber-50/30' : '' }}">
 
                                 <td class="px-5 py-3 text-gray-400 text-xs">
                                     {{ $karyawans->firstItem() + $loop->index }}
@@ -283,49 +279,38 @@
                                     {{ $k->tanggal_masuk?->format('d M Y') }}
                                 </td>
 
-                                {{-- Gaji --}}
-                                <td class="px-5 py-3 text-right text-gray-700 font-medium text-xs whitespace-nowrap">
-                                    Rp {{ number_format($k->gaji, 0, ',', '.') }}
-                                </td>
-
-                                {{-- Kolom Kenaikan (Badge H-30) --}}
+                                {{-- Kolom Kenaikan (Badge Berkala H-30 & Pengajuan Golongan) --}}
                                 <td class="px-5 py-3">
                                     <div class="flex flex-col gap-1 items-center">
-                                        {{-- Badge Kenaikan Gaji --}}
-                                        @if ($gajiDue)
-                                            @if ($gajiH30)
-                                                <span title="Kenaikan gaji: {{ $gajiDue->format('d M Y') }}"
+                                        {{-- Badge Kenaikan Berkala --}}
+                                        @if ($berkalaDue)
+                                            @if ($berkalaH30)
+                                                <span title="Kenaikan berkala: {{ $berkalaDue->format('d M Y') }}"
                                                       class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-700 whitespace-nowrap">
                                                     <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                                     </svg>
-                                                    Gaji H-{{ $gajiSisa }}
+                                                    Berkala H-{{ $berkalaSisa }}
                                                 </span>
                                             @else
                                                 <span class="text-xs text-gray-400 whitespace-nowrap">
-                                                    💰 {{ $gajiDue->format('d M Y') }}
+                                                    🗓️ {{ $berkalaDue->format('d M Y') }}
                                                 </span>
                                             @endif
                                         @endif
 
-                                        {{-- Badge Kenaikan Jabatan --}}
-                                        @if ($jabatanDue)
-                                            @if ($jabatanH30)
-                                                <span title="Kenaikan jabatan: {{ $jabatanDue->format('d M Y') }}"
-                                                      class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-700 whitespace-nowrap">
-                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                                                    </svg>
-                                                    Jabatan H-{{ $jabatanSisa }}
-                                                </span>
-                                            @else
-                                                <span class="text-xs text-gray-400 whitespace-nowrap">
-                                                    📋 {{ $jabatanDue->format('d M Y') }}
-                                                </span>
-                                            @endif
+                                        {{-- Badge Pengajuan Golongan Pending --}}
+                                        @if ($golonganPending)
+                                            <span title="Pengajuan golongan ke {{ $golonganPending->golonganBaru?->nama_golongan }} ({{ $golonganPending->tanggal_efektif?->format('d M Y') }})"
+                                                  class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-700 whitespace-nowrap">
+                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+                                                </svg>
+                                                Golongan: Pending
+                                            </span>
                                         @endif
 
-                                        @if (!$gajiDue && !$jabatanDue)
+                                        @if (!$berkalaDue && !$golonganPending)
                                             <span class="text-xs text-gray-300">—</span>
                                         @endif
                                     </div>
@@ -384,7 +369,7 @@
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="11" class="px-6 py-16 text-center">
+                                <td colspan="10" class="px-6 py-16 text-center">
                                     <div class="flex flex-col items-center gap-3 text-gray-400">
                                         <svg class="w-12 h-12" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m9-4a4 4 0 11-8 0 4 4 0 018 0zm6 4a2 2 0 100-4 2 2 0 000 4zM3 16a2 2 0 100-4 2 2 0 000 4z"/>
@@ -441,7 +426,7 @@
                 <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-700 mb-4">
                     <p class="font-semibold mb-1">Kolom wajib:</p>
                     <p><strong>nip, nik, nama_lengkap, tgl_masuk, tgl_mulai_jabatan</strong></p>
-                    <p class="mt-1 text-amber-600">Kolom baru: <strong>tgl_kenaikan_gaji</strong> & <strong>tgl_kenaikan_jabatan</strong>. Download template untuk format lengkap.</p>
+                    <p class="mt-1 text-amber-600">Kolom jadwal kenaikan berkala: <strong>tgl_berkala_terakhir</strong> & <strong>tgl_berkala_berikutnya</strong>. Download template untuk format lengkap.</p>
                 </div>
 
                 <div class="flex gap-3">

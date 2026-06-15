@@ -2,21 +2,26 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
-use App\Models\Karyawan;
 class JenisKontrak extends Model
 {
-    use HasFactory;
+    protected $primaryKey = 'id_jenis_kontrak';
 
     protected $fillable = [
         'nama_kontrak',
         'jam_kerja_sehari',
     ];
 
-    public function karyawans()
+    protected $casts = [
+        'jam_kerja_sehari' => 'integer',
+    ];
+
+    // ─── Relations ───────────────────────────────────────────────
+
+    public function karyawans(): HasMany
     {
-        return $this->hasMany(Karyawan::class);
+        return $this->hasMany(Karyawan::class, 'id_jenis_kontrak', 'id_jenis_kontrak');
     }
 }

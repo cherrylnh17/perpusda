@@ -209,55 +209,64 @@
 
                                 <div>
                                     <label class="block text-xs font-semibold text-gray-600 mb-1.5">Jabatan</label>
-                                    <x-searchable-select name="jabatan_id" id="ss-jabatan"
+                                    <x-searchable-select name="id_jabatan" id="ss-jabatan"
                                         placeholder="— Pilih Jabatan —"
-                                        :selected="old('jabatan_id', '')"
-                                        :error="$errors->has('jabatan_id')">
+                                        :selected="old('id_jabatan', '')"
+                                        :error="$errors->has('id_jabatan')">
                                         @foreach ($jabatans as $j)
-                                            <option value="{{ $j->id }}">{{ $j->nama_jabatan }}</option>
+                                            <option value="{{ $j->id_jabatan }}">{{ $j->nama_jabatan }}</option>
                                         @endforeach
                                     </x-searchable-select>
+                                    @error('id_jabatan')
+                                        <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
+                                    @enderror
                                 </div>
 
                                 <div>
                                     <label class="block text-xs font-semibold text-gray-600 mb-1.5">Pendidikan</label>
-                                    <x-searchable-select name="pendidikan_id" id="ss-pendidikan"
+                                    <x-searchable-select name="id_pendidikan" id="ss-pendidikan"
                                         placeholder="— Pilih Pendidikan —"
-                                        :selected="old('pendidikan_id', '')"
-                                        :error="$errors->has('pendidikan_id')">
+                                        :selected="old('id_pendidikan', '')"
+                                        :error="$errors->has('id_pendidikan')">
                                         @foreach ($pendidikans as $p)
-                                            <option value="{{ $p->id }}">{{ $p->nama_pendidikan }}</option>
+                                            <option value="{{ $p->id_pendidikan }}">{{ $p->nama_pendidikan }}</option>
                                         @endforeach
                                     </x-searchable-select>
+                                    @error('id_pendidikan')
+                                        <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
+                                    @enderror
                                 </div>
 
                                 <div>
                                     <label class="block text-xs font-semibold text-gray-600 mb-1.5">Jenis Kontrak</label>
-                                    <x-searchable-select name="jenis_kontrak_id" id="ss-kontrak"
+                                    <x-searchable-select name="id_jenis_kontrak" id="ss-kontrak"
                                         placeholder="— Pilih Jenis Kontrak —"
-                                        :selected="old('jenis_kontrak_id', '')"
-                                        :error="$errors->has('jenis_kontrak_id')">
+                                        :selected="old('id_jenis_kontrak', '')"
+                                        :error="$errors->has('id_jenis_kontrak')">
                                         @foreach ($kontraks as $kt)
-                                            <option value="{{ $kt->id }}">{{ $kt->nama_kontrak }}</option>
+                                            <option value="{{ $kt->id_jenis_kontrak }}">{{ $kt->nama_kontrak }}</option>
                                         @endforeach
                                     </x-searchable-select>
+                                    @error('id_jenis_kontrak')
+                                        <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
+                                    @enderror
                                 </div>
 
                                 <div>
                                     <label class="block text-xs font-semibold text-gray-600 mb-1.5">Golongan</label>
-                                    <x-searchable-select name="golongan_id" id="ss-golongan"
+                                    <x-searchable-select name="id_golongan" id="ss-golongan"
                                         placeholder="— Pilih Golongan —"
-                                        :selected="old('golongan_id', '')"
-                                        :error="$errors->has('golongan_id')">
+                                        :selected="old('id_golongan', '')"
+                                        :error="$errors->has('id_golongan')">
                                         @foreach ($golongans->groupBy('tipe') as $tipe => $items)
                                             <optgroup label="{{ $tipe }}">
                                                 @foreach ($items as $g)
-                                                    <option value="{{ $g->id }}">{{ $g->nama_golongan }}</option>
+                                                    <option value="{{ $g->id_golongan }}">{{ $g->nama_golongan }}</option>
                                                 @endforeach
                                             </optgroup>
                                         @endforeach
                                     </x-searchable-select>
-                                    @error('golongan_id')
+                                    @error('id_golongan')
                                         <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
                                     @enderror
                                 </div>
@@ -270,13 +279,11 @@
                                         @php
                                             $statuses = [
                                                 'Aktif'   => 'bg-emerald-50 border-emerald-400 text-emerald-700',
-                                                'Cuti'    => 'bg-amber-50 border-amber-400 text-amber-700',
                                                 'Pensiun' => 'bg-violet-50 border-violet-400 text-violet-700',
-                                                'Resign'  => 'bg-red-50 border-red-400 text-red-700',
                                             ];
                                             $statusDots = [
-                                                'Aktif' => 'bg-emerald-500', 'Cuti' => 'bg-amber-500',
-                                                'Pensiun' => 'bg-violet-500', 'Resign' => 'bg-red-500',
+                                                'Aktif' => 'bg-emerald-500',
+                                                'Pensiun' => 'bg-violet-500',
                                             ];
                                         @endphp
                                         @foreach($statuses as $s => $checkedClass)
@@ -309,26 +316,11 @@
 
                                 <div>
                                     <label class="block text-xs font-semibold text-gray-600 mb-1.5">
-                                        Tanggal Mulai Jabatan <span class="text-red-500">*</span>
+                                        Tanggal Mulai Golongan <span class="text-red-500">*</span>
                                     </label>
-                                    <input type="date" name="tanggal_mulai_jabatan" value="{{ old('tanggal_mulai_jabatan') }}"
-                                           class="w-full px-3.5 py-2.5 text-sm border rounded-xl bg-white text-gray-900 outline-none transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('tanggal_mulai_jabatan') border-red-400 ring-2 ring-red-100 @else border-gray-300 @enderror">
-                                    @error('tanggal_mulai_jabatan')
-                                        <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
-                                    @enderror
-                                </div>
-
-                                <div class="sm:col-span-2">
-                                    <label class="block text-xs font-semibold text-gray-600 mb-1.5">
-                                        Gaji <span class="text-red-500">*</span>
-                                    </label>
-                                    <div class="relative">
-                                        <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-semibold text-gray-400 pointer-events-none">Rp</span>
-                                        <input type="number" name="gaji" min="0" step="1000"
-                                               value="{{ old('gaji', 0) }}"
-                                               class="w-full pl-9 pr-3.5 py-2.5 text-sm border rounded-xl bg-white text-gray-900 outline-none transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('gaji') border-red-400 ring-2 ring-red-100 @else border-gray-300 @enderror">
-                                    </div>
-                                    @error('gaji')
+                                    <input type="date" name="tanggal_mulai_golongan" value="{{ old('tanggal_mulai_golongan') }}"
+                                           class="w-full px-3.5 py-2.5 text-sm border rounded-xl bg-white text-gray-900 outline-none transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('tanggal_mulai_golongan') border-red-400 ring-2 ring-red-100 @else border-gray-300 @enderror">
+                                    @error('tanggal_mulai_golongan')
                                         <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
                                     @enderror
                                 </div>
@@ -337,7 +329,7 @@
                         </div>
                     </div>
 
-                    {{-- 4. Jadwal Kenaikan ─────────────────────────────────── --}}
+                    {{-- 4. Jadwal Kenaikan Berkala ─────────────────────────────────── --}}
                     <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
                         <div class="flex items-center gap-3 px-5 py-3.5 bg-amber-50 border-b border-amber-100">
                             <div class="w-7 h-7 rounded-lg bg-amber-100 flex items-center justify-center text-amber-600 flex-shrink-0">
@@ -346,14 +338,35 @@
                                 </svg>
                             </div>
                             <div>
-                                <span class="text-xs font-bold text-amber-800 uppercase tracking-wider">Jadwal Kenaikan Berikutnya</span>
-                                <p class="text-xs text-amber-600 mt-0.5">Opsional — sistem akan memberi notifikasi H-30 sebelum tanggal ini</p>
+                                <span class="text-xs font-bold text-amber-800 uppercase tracking-wider">Jadwal Kenaikan Berkala</span>
+                                <p class="text-xs text-amber-600 mt-0.5">Opsional — sistem akan memberi notifikasi H-30 sebelum tanggal berikutnya</p>
                             </div>
                         </div>
                         <div class="p-5">
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
-                                {{-- Kenaikan Gaji --}}
+                                {{-- Berkala Terakhir --}}
+                                <div>
+                                    <label class="block text-xs font-semibold text-gray-600 mb-1.5">
+                                        <span class="inline-flex items-center gap-1.5">
+                                            <span class="w-4 h-4 rounded bg-gray-100 flex items-center justify-center">
+                                                <svg class="w-2.5 h-2.5 text-gray-600" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                                </svg>
+                                            </span>
+                                            Tanggal Berkala Terakhir
+                                        </span>
+                                    </label>
+                                    <input type="date" name="tanggal_berkala_terakhir"
+                                           value="{{ old('tanggal_berkala_terakhir') }}"
+                                           class="w-full px-3.5 py-2.5 text-sm border rounded-xl bg-white text-gray-900 outline-none transition-all focus:ring-2 focus:ring-gray-400 focus:border-transparent @error('tanggal_berkala_terakhir') border-red-400 ring-2 ring-red-100 @else border-gray-300 @enderror">
+                                    @error('tanggal_berkala_terakhir')
+                                        <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
+                                    @enderror
+                                    <p class="text-xs text-gray-400 mt-1">Tanggal kenaikan berkala terakhir yang sudah disetujui (jika ada)</p>
+                                </div>
+
+                                {{-- Berkala Berikutnya --}}
                                 <div>
                                     <label class="block text-xs font-semibold text-gray-600 mb-1.5">
                                         <span class="inline-flex items-center gap-1.5">
@@ -362,34 +375,13 @@
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                                 </svg>
                                             </span>
-                                            Tanggal Kenaikan Gaji
+                                            Tanggal Berkala Berikutnya
                                         </span>
                                     </label>
-                                    <input type="date" name="tanggal_kenaikan_gaji_berikutnya"
-                                           value="{{ old('tanggal_kenaikan_gaji_berikutnya') }}"
-                                           class="w-full px-3.5 py-2.5 text-sm border rounded-xl bg-white text-gray-900 outline-none transition-all focus:ring-2 focus:ring-green-400 focus:border-transparent @error('tanggal_kenaikan_gaji_berikutnya') border-red-400 ring-2 ring-red-100 @else border-gray-300 @enderror">
-                                    @error('tanggal_kenaikan_gaji_berikutnya')
-                                        <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
-                                    @enderror
-                                    <p class="text-xs text-gray-400 mt-1">Kosongkan jika belum ada jadwal</p>
-                                </div>
-
-                                {{-- Kenaikan Jabatan --}}
-                                <div>
-                                    <label class="block text-xs font-semibold text-gray-600 mb-1.5">
-                                        <span class="inline-flex items-center gap-1.5">
-                                            <span class="w-4 h-4 rounded bg-blue-100 flex items-center justify-center">
-                                                <svg class="w-2.5 h-2.5 text-blue-600" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                                                </svg>
-                                            </span>
-                                            Tanggal Kenaikan Jabatan
-                                        </span>
-                                    </label>
-                                    <input type="date" name="tanggal_kenaikan_jabatan_berikutnya"
-                                           value="{{ old('tanggal_kenaikan_jabatan_berikutnya') }}"
-                                           class="w-full px-3.5 py-2.5 text-sm border rounded-xl bg-white text-gray-900 outline-none transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('tanggal_kenaikan_jabatan_berikutnya') border-red-400 ring-2 ring-red-100 @else border-gray-300 @enderror">
-                                    @error('tanggal_kenaikan_jabatan_berikutnya')
+                                    <input type="date" name="tanggal_berkala_berikutnya"
+                                           value="{{ old('tanggal_berkala_berikutnya') }}"
+                                           class="w-full px-3.5 py-2.5 text-sm border rounded-xl bg-white text-gray-900 outline-none transition-all focus:ring-2 focus:ring-green-400 focus:border-transparent @error('tanggal_berkala_berikutnya') border-red-400 ring-2 ring-red-100 @else border-gray-300 @enderror">
+                                    @error('tanggal_berkala_berikutnya')
                                         <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
                                     @enderror
                                     <p class="text-xs text-gray-400 mt-1">Kosongkan jika belum ada jadwal</p>
