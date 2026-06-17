@@ -13,8 +13,10 @@ class NotifikasiComposer
      * Inject $notifikasiKenaikan dan $jumlahNotifikasi ke semua halaman.
      *
      * Notifikasi terdiri dari:
-     *  1. Karyawan aktif dengan tanggal_berkala_berikutnya dalam 30 hari ke depan
-     *  2. Pengajuan kenaikan golongan yang masih pending
+     *  1. Karyawan aktif dengan jadwal kenaikan berkala (tabel kenaikan_berkalas,
+     *     relasi kenaikanBerkalaAktif) yang tanggal_berikutnya dalam 30 hari ke depan.
+     *  2. Pengajuan kenaikan golongan (tabel kenaikan_golongans, relasi
+     *     kenaikanGolonganAktif) yang statusnya masih pending.
      */
     public function compose(View $view): void
     {
@@ -22,44 +24,44 @@ class NotifikasiComposer
         $batas = $today->copy()->addDays(30);
 
         // ── Kenaikan Berkala jatuh tempo H-30 ────────────────────────────
-        $berkala = Karyawan::with(['jabatan'])
+        $berkala = Karyawan::with(['jabatan', 'kenaikanBerkalaAktif'])
             ->where('status_aktif', 'Aktif')
-            ->whereNotNull('tanggal_berkala_berikutnya')
-            ->whereBetween('tanggal_berkala_berikutnya', [$today, $batas])
-            ->orderBy('tanggal_berkala_berikutnya')
-            ->limit(10)
+            ->whereHas('kenaikanBerkalaAktif', function ($q) use ($today, $batas) {
+                $q->whereBetween('tanggal_berikutnya', [$today, $batas]);
+            })
             ->get()
             ->map(function ($k) {
-                return [
-                    'tipe'          => 'berkala',
-                    'karyawan'      => $k,
-                    'tanggal'       => $k->tanggal_berkala_berikutnya,
-                    'label'         => 'Kenaikan Berkala',
-                    'warna'         => 'green',
+                return (object) [
+                    'tipe'             => 'berkala',
+                    'karyawan'         => $k,
+                    'tanggal_kenaikan' => $k->kenaikanBerkalaAktif?->tanggal_berikutnya,
+                    'label'            => 'Kenaikan Berkala',
+                    'warna'            => 'green',
                 ];
             });
 
         // ── Pengajuan Kenaikan Golongan pending ───────────────────────────
-        $golongan = Karyawan::with(['jabatan', 'golongan', 'pengajuanGolonganPending.golonganBaru'])
+        $golongan = Karyawan::with(['jabatan', 'golongan', 'kenaikanGolonganAktif.golonganBaru'])
             ->where('status_aktif', 'Aktif')
-            ->whereHas('pengajuanGolonganPending')
-            ->limit(10)
+            ->whereHas('kenaikanGolongans', function ($q) {
+                $q->pending();
+            })
             ->get()
             ->map(function ($k) {
-                $pengajuan = $k->pengajuanGolonganPending;
-                return [
-                    'tipe'          => 'golongan',
-                    'karyawan'      => $k,
-                    'tanggal'       => $pengajuan?->tanggal_efektif,
-                    'golongan_baru' => $pengajuan?->golonganBaru?->nama_golongan,
-                    'label'         => 'Kenaikan Golongan',
-                    'warna'         => 'violet',
+                $pengajuan = $k->kenaikanGolonganAktif;
+                return (object) [
+                    'tipe'             => 'golongan',
+                    'karyawan'         => $k,
+                    'tanggal_kenaikan' => $pengajuan?->tanggal_berikutnya,
+                    'golongan_baru'    => $pengajuan?->golonganBaru?->nama_golongan,
+                    'label'            => 'Kenaikan Golongan',
+                    'warna'            => 'violet',
                 ];
             });
 
         // ── Gabungkan & urutkan berdasarkan tanggal terdekat ─────────────
         $notifikasiKenaikan = $berkala->concat($golongan)
-            ->sortBy('tanggal')
+            ->sortBy('tanggal_kenaikan')
             ->take(10)
             ->values();
 

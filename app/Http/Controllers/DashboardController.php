@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Jabatan;
 use App\Models\JenisKontrak;
 use App\Models\Karyawan;
+use App\Models\KenaikanBerkala;
+use App\Models\KenaikanGolongan;
 use App\Models\Pendidikan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -88,30 +90,44 @@ class DashboardController extends Controller
             ->get();
 
         // ── 5 Karyawan aktif dengan kenaikan berkala H-30 terdekat ──────────
-        // Berdasarkan tanggal_berkala_berikutnya di tabel karyawans
+        // Berdasarkan jadwal aktif (scheduled/pending) di tabel kenaikan_berkalas
         $today = Carbon::today();
         $batas = $today->copy()->addDays(30);
 
-        $karyawanNaikBerkala = Karyawan::with(['jabatan'])
+        $karyawanNaikBerkala = Karyawan::with([
+                'jabatan',
+                'kenaikanBerkalaAktif',
+            ])
             ->where('status_aktif', 'Aktif')
-            ->whereNotNull('tanggal_berkala_berikutnya')
-            ->whereBetween('tanggal_berkala_berikutnya', [$today, $batas])
-            ->orderBy('tanggal_berkala_berikutnya')
+            ->whereHas('kenaikanBerkalaAktif', function ($q) use ($today, $batas) {
+                $q->whereBetween('tanggal_berikutnya', [$today, $batas]);
+            })
+            ->orderBy(
+                \App\Models\KenaikanBerkala::select('tanggal_berikutnya')
+                    ->whereColumn('id_karyawan', 'karyawans.id_karyawan')
+                    ->whereIn('status', ['scheduled', 'pending'])
+                    ->orderBy('tanggal_berikutnya')
+                    ->limit(1)
+            )
             ->limit(5)
             ->get();
 
-        // ── 5 Karyawan aktif dengan pengajuan kenaikan golongan pending ───────
-        // Diambil dari tabel pengajuan_kenaikan_golongans (status pending),
-        // diurutkan berdasarkan tanggal_efektif terdekat
-        $karyawanNaikGolongan = Karyawan::with(['jabatan', 'golongan', 'pengajuanGolonganPending.golonganBaru'])
+        // ── 5 Karyawan aktif dengan kenaikan golongan pending ────────────────
+        // Diambil dari kenaikan_golongans status pending, diurutkan tanggal terdekat
+        $karyawanNaikGolongan = Karyawan::with([
+                'jabatan',
+                'golongan',
+                'kenaikanGolonganAktif.golonganLama',
+                'kenaikanGolonganAktif.golonganBaru',
+            ])
             ->where('status_aktif', 'Aktif')
-            ->whereHas('pengajuanGolonganPending')
+            ->whereHas('kenaikanGolonganAktif', fn ($q) => $q->where('status', 'pending'))
             ->orderBy(
-                \App\Models\PengajuanKenaikanGolongan::select('tanggal_efektif')
+                \App\Models\KenaikanGolongan::select('tanggal_berikutnya')
                     ->whereColumn('id_karyawan', 'karyawans.id_karyawan')
                     ->where('status', 'pending')
-                    ->limit(1),
-                'asc'
+                    ->orderBy('tanggal_berikutnya')
+                    ->limit(1)
             )
             ->limit(5)
             ->get();

@@ -9,8 +9,12 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
-Schedule::call(function () {
-    NotifikasiKenaikan::generateH30();
-})->dailyAt('07:00')
-  ->name('generate-notifikasi-h30')
-  ->withoutOverlapping();
+// Schedule::call(function () {
+//     NotifikasiKenaikan::generateH30();
+// })->dailyAt('07:00')
+//   ->name('generate-notifikasi-h30')
+//   ->withoutOverlapping();
+
+
+
+Schedule::command('kenaikan:proses-pending')->daily();

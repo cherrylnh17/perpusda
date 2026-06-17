@@ -27,17 +27,11 @@ class Karyawan extends Model
         'id_jenis_kontrak',
         'id_golongan',
         'status_aktif',
-        'tanggal_berkala_terakhir',
-        'tanggal_berkala_berikutnya',
-        'tanggal_mulai_golongan',
     ];
 
     protected $casts = [
-        'tanggal_lahir'              => 'date',
-        'tanggal_masuk'              => 'date',
-        'tanggal_mulai_golongan'      => 'date',
-        'tanggal_berkala_terakhir'   => 'date',
-        'tanggal_berkala_berikutnya' => 'date',
+        'tanggal_lahir' => 'date',
+        'tanggal_masuk' => 'date',
     ];
 
     // ─── Relations ───────────────────────────────────────────────
@@ -62,45 +56,35 @@ class Karyawan extends Model
         return $this->belongsTo(Golongan::class, 'id_golongan', 'id_golongan');
     }
 
-    public function pengajuanBerkalas(): HasMany
+    public function kenaikanBerkalas(): HasMany
     {
-        return $this->hasMany(PengajuanKenaikanBerkala::class, 'id_karyawan', 'id_karyawan');
+        return $this->hasMany(KenaikanBerkala::class, 'id_karyawan', 'id_karyawan');
     }
 
-    /** Pengajuan berkala yang sedang pending (max 1) */
-    public function pengajuanBerkalaPending(): HasOne
+    /** Berkala yang sedang aktif (scheduled atau pending, max 1) */
+    public function kenaikanBerkalaAktif(): HasOne
     {
-        return $this->hasOne(PengajuanKenaikanBerkala::class, 'id_karyawan', 'id_karyawan')
-            ->where('status', 'pending');
+        return $this->hasOne(KenaikanBerkala::class, 'id_karyawan', 'id_karyawan')
+            ->whereIn('status', ['scheduled', 'pending'])
+            ->latestOfMany('tanggal_berikutnya');
     }
 
-    public function pengajuanGolongans(): HasMany
+    public function kenaikanGolongans(): HasMany
     {
-        return $this->hasMany(PengajuanKenaikanGolongan::class, 'id_karyawan', 'id_karyawan');
+        return $this->hasMany(KenaikanGolongan::class, 'id_karyawan', 'id_karyawan');
     }
 
-    /** Pengajuan golongan yang sedang pending (max 1) */
-    public function pengajuanGolonganPending(): HasOne
+    /** Golongan yang sedang aktif (scheduled atau pending, max 1) */
+    public function kenaikanGolonganAktif(): HasOne
     {
-        return $this->hasOne(PengajuanKenaikanGolongan::class, 'id_karyawan', 'id_karyawan')
-            ->where('status', 'pending');
+        return $this->hasOne(KenaikanGolongan::class, 'id_karyawan', 'id_karyawan')
+            ->whereIn('status', ['scheduled', 'pending'])
+            ->latestOfMany('tanggal_berikutnya');
     }
 
     public function historiGolongans(): HasMany
     {
         return $this->hasMany(HistoriGolongan::class, 'id_karyawan', 'id_karyawan')
             ->orderByDesc('tanggal_efektif');
-    }
-
-    // ─── Helpers ─────────────────────────────────────────────────
-
-    /** Apakah karyawan sudah memenuhi syarat kenaikan berkala */
-    public function sudahJatuhTempoBerkala(): bool
-    {
-        if (! $this->tanggal_berkala_berikutnya) {
-            return false;
-        }
-
-        return now()->gte($this->tanggal_berkala_berikutnya);
     }
 }

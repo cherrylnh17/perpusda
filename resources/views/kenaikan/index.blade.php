@@ -151,19 +151,20 @@
                             @php
                                 $today   = now()->startOfDay();
 
-                                $berkalaDue  = $k->tanggal_berkala_berikutnya;
-                                $berkalaSisa = $berkalaDue ? (int) $today->diffInDays($berkalaDue, false) : null;
-                                $berkalaH7   = $berkalaSisa !== null && $berkalaSisa >= 0 && $berkalaSisa <= 7;
-                                $berkalaH30  = $berkalaSisa !== null && $berkalaSisa >= 0 && $berkalaSisa <= 30;
+                                $berkalaAktif = $k->kenaikanBerkalaAktif;
+                                $berkalaDue   = $berkalaAktif?->tanggal_berikutnya;
+                                $berkalaSisa  = $berkalaDue ? (int) $today->diffInDays($berkalaDue, false) : null;
+                                $berkalaH7    = $berkalaSisa !== null && $berkalaSisa >= 0 && $berkalaSisa <= 7;
+                                $berkalaH30   = $berkalaSisa !== null && $berkalaSisa >= 0 && $berkalaSisa <= 30;
 
-                                $golonganPending = $k->pengajuanGolonganPending;
-                                $hasPendingBerkala  = $k->pengajuanBerkalaPending !== null;
+                                $golonganAktif   = $k->kenaikanGolonganAktif;
+                                $hasPendingBerkala = $berkalaAktif?->status === 'pending';
 
-                                // Warna baris: merah H-7, kuning H-30, biru ada golongan pending
+                                // Warna baris: merah H-7, kuning H-30, ungu ada golongan aktif
                                 $rowClass = '';
                                 if ($berkalaH7) {
                                     $rowClass = 'bg-red-50/40';
-                                } elseif ($berkalaH30 || $golonganPending) {
+                                } elseif ($berkalaH30 || $golonganAktif) {
                                     $rowClass = 'bg-amber-50/30';
                                 }
                             @endphp
@@ -251,18 +252,18 @@
 
                                 {{-- Kenaikan Golongan --}}
                                 <td class="px-5 py-3 text-center">
-                                    @if ($golonganPending)
+                                    @if ($golonganAktif)
                                         <div class="flex flex-col items-center gap-1">
-                                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-700 border border-blue-200">
-                                                Pending
+                                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-purple-100 text-purple-700 border border-purple-200">
+                                                {{ $golonganAktif->status === 'pending' ? 'Menunggu' : 'Terjadwal' }}
                                             </span>
                                             <span class="text-xs text-gray-500">
                                                 {{ $k->golongan?->nama_golongan ?? '-' }}
                                                 →
-                                                {{ $golonganPending->golonganBaru?->nama_golongan ?? '?' }}
+                                                {{ $golonganAktif->golonganBaru?->nama_golongan ?? '?' }}
                                             </span>
                                             <span class="text-xs text-gray-400">
-                                                Efektif: {{ $golonganPending->tanggal_efektif?->format('d M Y') ?? '-' }}
+                                                {{ $golonganAktif->tanggal_berikutnya?->format('d M Y') ?? '-' }}
                                             </span>
                                         </div>
                                     @else
@@ -294,7 +295,7 @@
                                         @endif
 
                                         {{-- Tombol Proses Golongan --}}
-                                        @if ($golonganPending)
+                                        @if ($golonganAktif && $golonganAktif->status === 'pending')
                                         <button
                                             type="button"
                                             title="Proses Kenaikan Golongan"
@@ -302,10 +303,10 @@
                                                 {{ $k->id_karyawan }},
                                                 '{{ addslashes($k->nama_lengkap) }}',
                                                 '{{ addslashes($k->golongan?->nama_golongan ?? '') }}',
-                                                '{{ $golonganPending->golongan_baru_id }}',
-                                                '{{ $golonganPending->tanggal_efektif?->format('Y-m-d') }}'
+                                                '{{ $golonganAktif->golongan_baru_id }}',
+                                                '{{ $golonganAktif->tanggal_berikutnya?->format('Y-m-d') }}'
                                             )"
-                                            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white transition-colors">
+                                            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-purple-600 hover:bg-purple-700 text-white transition-colors">
                                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
                                             </svg>
@@ -380,17 +381,15 @@
             <form id="formApproveBerkala" method="POST" action="" class="px-6 py-4 space-y-4">
                 @csrf
 
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-medium text-gray-600 mb-1.5">Tanggal Efektif <span class="text-red-500">*</span></label>
-                        <input type="date" name="tanggal_efektif" id="inputBerkalaTglEfektif" required
-                               class="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium text-gray-600 mb-1.5">Berkala Berikutnya <span class="text-red-500">*</span></label>
-                        <input type="date" name="tanggal_berikutnya" required
-                               class="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none">
-                    </div>
+                <div class="p-3 bg-green-50 border border-green-200 rounded-xl text-xs text-green-700">
+                    Kenaikan berkala akan disetujui. Sistem akan membuat jadwal berkala berikutnya secara otomatis.
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1.5">Berkala Berikutnya <span class="text-red-500">*</span></label>
+                    <input type="date" name="tanggal_berikutnya" id="inputBerkalaTglBerikutnya" required
+                           class="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none">
+                    <p class="text-xs text-gray-400 mt-1">Default +2 tahun dari jadwal saat ini — ubah jika perlu</p>
                 </div>
 
                 <div>
@@ -580,7 +579,13 @@
 
     function openModalBerkala(id, nama, tglBerkala, hasPending) {
         document.getElementById('modalBerkalaNama').textContent = nama;
-        document.getElementById('inputBerkalaTglEfektif').value = tglBerkala;
+
+        // Default tanggal berikutnya = +2 tahun dari jadwal aktif
+        if (tglBerkala) {
+            const d = new Date(tglBerkala);
+            d.setFullYear(d.getFullYear() + 2);
+            document.getElementById('inputBerkalaTglBerikutnya').value = d.toISOString().split('T')[0];
+        }
 
         document.getElementById('formApproveBerkala').action = makeUrl(routeApproveBerkala, id);
         document.getElementById('formRejectBerkala').action  = makeUrl(routeRejectBerkala, id);

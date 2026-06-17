@@ -21,7 +21,8 @@ class KaryawanController extends Controller
     {
         $query = Karyawan::with([
             'jabatan', 'pendidikan', 'jenisKontrak', 'golongan',
-            'pengajuanGolonganPending.golonganBaru',
+            'kenaikanBerkalaAktif',
+            'kenaikanGolonganAktif.golonganBaru',
         ]);
 
         if ($request->filled('search')) {
@@ -44,13 +45,16 @@ class KaryawanController extends Controller
             $today = now()->toDateString();
 
             if ($request->kenaikan === 'berkala') {
-                $query->whereBetween('tanggal_berkala_berikutnya', [$today, $batas]);
+                $query->whereHas('kenaikanBerkalaAktif', function ($q) use ($today, $batas) {
+                    $q->whereBetween('tanggal_berikutnya', [$today, $batas]);
+                });
             } elseif ($request->kenaikan === 'golongan') {
-                $query->whereHas('pengajuanGolonganPending');
+                $query->whereHas('kenaikanGolonganAktif');
             } elseif ($request->kenaikan === 'semua') {
                 $query->where(function ($q) use ($today, $batas) {
-                    $q->whereBetween('tanggal_berkala_berikutnya', [$today, $batas])
-                      ->orWhereHas('pengajuanGolonganPending');
+                    $q->whereHas('kenaikanBerkalaAktif', function ($qq) use ($today, $batas) {
+                        $qq->whereBetween('tanggal_berikutnya', [$today, $batas]);
+                    })->orWhereHas('kenaikanGolonganAktif');
                 });
             }
         }
@@ -65,8 +69,9 @@ class KaryawanController extends Controller
         $today = now()->toDateString();
         $totalMendekatiKenaikan = Karyawan::where('status_aktif', 'Aktif')
             ->where(function ($q) use ($today, $batas) {
-                $q->whereBetween('tanggal_berkala_berikutnya', [$today, $batas])
-                  ->orWhereHas('pengajuanGolonganPending');
+                $q->whereHas('kenaikanBerkalaAktif', function ($qq) use ($today, $batas) {
+                    $qq->whereBetween('tanggal_berikutnya', [$today, $batas]);
+                })->orWhereHas('kenaikanGolonganAktif');
             })->count();
 
         return view('karyawan.index', compact(
@@ -92,11 +97,33 @@ class KaryawanController extends Controller
     {
         $validated = $request->validate($this->rules());
 
+        // 'tanggal_berkala_berikutnya' bukan kolom di tabel karyawans — dipakai
+        // untuk membuat jadwal kenaikan berkala pertama di tabel kenaikan_berkalas.
+        $tanggalBerkalaBerikutnya  = $validated['tanggal_berkala_berikutnya']  ?? null;
+        $tanggalGolonganBerikutnya = $validated['tanggal_golongan_berikutnya'] ?? null;
+        unset($validated['tanggal_berkala_berikutnya'], $validated['tanggal_golongan_berikutnya']);
+
         if ($request->hasFile('foto')) {
             $validated['foto'] = $request->file('foto')->store('karyawan/foto', 'public');
         }
 
-        Karyawan::create($validated);
+        $karyawan = Karyawan::create($validated);
+
+        if ($tanggalBerkalaBerikutnya) {
+            $karyawan->kenaikanBerkalas()->create([
+                'tanggal_berikutnya' => $tanggalBerkalaBerikutnya,
+                'status'             => now()->gte($tanggalBerkalaBerikutnya) ? 'pending' : 'scheduled',
+            ]);
+        }
+
+        if ($tanggalGolonganBerikutnya) {
+            $karyawan->kenaikanGolongans()->create([
+                'tanggal_berikutnya' => $tanggalGolonganBerikutnya,
+                'golongan_lama_id'   => $karyawan->id_golongan, // snapshot golongan saat input
+                'golongan_baru_id'   => null,                   // diisi admin saat approve
+                'status'             => now()->gte($tanggalGolonganBerikutnya) ? 'pending' : 'scheduled',
+            ]);
+        }
 
         return redirect()->route('karyawan.index')
             ->with('success', 'Data karyawan berhasil ditambahkan.');
@@ -111,9 +138,9 @@ class KaryawanController extends Controller
             'pendidikan',
             'jenisKontrak',
             'golongan',
-            'pengajuanBerkalaPending',
-            'pengajuanGolonganPending' => fn ($q) => $q->with(['golonganLama', 'golonganBaru']),
-            'pengajuanBerkalas'  => fn ($q) => $q->orderByDesc('tanggal_efektif')
+            'kenaikanBerkalaAktif',
+            'kenaikanGolonganAktif' => fn ($q) => $q->with(['golonganLama', 'golonganBaru']),
+            'kenaikanBerkalas'   => fn ($q) => $q->orderByDesc('tanggal_berikutnya')
                                                   ->with('diprosesByUser')
                                                   ->limit(5),
             'historiGolongans'   => fn ($q) => $q->with(['golonganLama', 'golonganBaru', 'dicatatByUser'])
@@ -141,6 +168,11 @@ class KaryawanController extends Controller
     {
         $validated = $request->validate($this->rules($karyawan->id_karyawan));
 
+        // Ambil jadwal sebelum di-unset dari $validated
+        $tanggalBerkalaBerikutnya  = $validated['tanggal_berkala_berikutnya']  ?? null;
+        $tanggalGolonganBerikutnya = $validated['tanggal_golongan_berikutnya'] ?? null;
+        unset($validated['tanggal_berkala_berikutnya'], $validated['tanggal_golongan_berikutnya']);
+
         if ($request->hasFile('foto')) {
             if ($karyawan->foto) Storage::disk('public')->delete($karyawan->foto);
             $validated['foto'] = $request->file('foto')->store('karyawan/foto', 'public');
@@ -154,6 +186,51 @@ class KaryawanController extends Controller
         }
 
         $karyawan->update($validated);
+
+        // ── Upsert jadwal berkala ─────────────────────────────────────────────
+        // Cari row scheduled/pending yang sudah ada; update jika ada, buat jika tidak,
+        // atau hapus jadwal jika field dikosongkan.
+        $berkalaAktif = $karyawan->kenaikanBerkalaAktif;
+
+        if ($tanggalBerkalaBerikutnya) {
+            if ($berkalaAktif) {
+                $berkalaAktif->update([
+                    'tanggal_berikutnya' => $tanggalBerkalaBerikutnya,
+                    'status' => now()->gte($tanggalBerkalaBerikutnya) ? 'pending' : 'scheduled',
+                ]);
+            } else {
+                $karyawan->kenaikanBerkalas()->create([
+                    'tanggal_berikutnya' => $tanggalBerkalaBerikutnya,
+                    'status' => now()->gte($tanggalBerkalaBerikutnya) ? 'pending' : 'scheduled',
+                ]);
+            }
+        } elseif ($berkalaAktif) {
+            // Field dikosongkan → hapus jadwal yang ada
+            $berkalaAktif->delete();
+        }
+
+        // ── Upsert jadwal golongan ────────────────────────────────────────────
+        $karyawan->refresh(); // pastikan id_golongan sudah ter-update
+        $golonganAktif = $karyawan->kenaikanGolonganAktif;
+
+        if ($tanggalGolonganBerikutnya) {
+            if ($golonganAktif) {
+                $golonganAktif->update([
+                    'tanggal_berikutnya' => $tanggalGolonganBerikutnya,
+                    'status' => now()->gte($tanggalGolonganBerikutnya) ? 'pending' : 'scheduled',
+                ]);
+            } else {
+                $karyawan->kenaikanGolongans()->create([
+                    'tanggal_berikutnya' => $tanggalGolonganBerikutnya,
+                    'golongan_lama_id'   => $karyawan->id_golongan, // snapshot saat input
+                    'golongan_baru_id'   => null,
+                    'status' => now()->gte($tanggalGolonganBerikutnya) ? 'pending' : 'scheduled',
+                ]);
+            }
+        } elseif ($golonganAktif) {
+            // Field dikosongkan → hapus jadwal yang ada
+            $golonganAktif->delete();
+        }
 
         return redirect()->route('karyawan.show', $karyawan)
             ->with('success', 'Data karyawan berhasil diperbarui.');
@@ -170,97 +247,7 @@ class KaryawanController extends Controller
             ->with('success', 'Data karyawan berhasil dihapus.');
     }
 
-    // ── EXPORT EXCEL ─────────────────────────────────────────────────────────
 
-    public function exportExcel(Request $request)
-    {
-        $export = new \App\Exports\KaryawanExport($request->all());
-        return $export->download('karyawan_' . now()->format('Ymd_His') . '.xlsx');
-    }
-
-    // ── IMPORT EXCEL ─────────────────────────────────────────────────────────
-
-    public function importExcel(Request $request)
-    {
-        $request->validate([
-            'file' => 'required|file|mimes:xlsx,xls|max:5120',
-        ]);
-
-        $import = new \App\Imports\KaryawanImport();
-        $import->import($request->file('file'));
-
-        $msg = "Import berhasil: {$import->imported} data ditambahkan/diperbarui.";
-        if (!empty($import->errors)) {
-            $msg .= ' Gagal: ' . implode('; ', array_slice($import->errors, 0, 3));
-        }
-
-        return redirect()->route('karyawan.index')->with('success', $msg);
-    }
-
-    // ── DOWNLOAD TEMPLATE ─────────────────────────────────────────────────────
-
-    public function downloadTemplate()
-    {
-        $filename = 'template_import_karyawan.xlsx';
-
-        return response()->streamDownload(function () {
-
-            $writer = SimpleExcelWriter::streamDownload('template_import_karyawan.xlsx');
-
-            $writer->addHeader([
-                'nip', 'nik', 'nama_lengkap', 'jenis_kelamin',
-                'tanggal_lahir', 'jabatan', 'pendidikan', 'jenis_kontrak',
-                'golongan',
-                'tgl_masuk', 'tgl_mulai_jabatan', 'agama',
-                'golongan_darah', 'status', 'alamat',
-                'tgl_berkala_terakhir',   // Tanggal kenaikan berkala terakhir (d/m/Y)
-                'tgl_berkala_berikutnya', // Tanggal kenaikan berkala berikutnya (d/m/Y)
-            ]);
-
-            $writer->addRow([
-                '198501012010011001', '3509012501850001', 'Budi Santoso', 'Laki-laki',
-                '25/01/1985', 'Staff IT', 'S1', 'Pegawai Tetap',
-                'III/a',
-                '01/01/2010', '01/03/2010', 'Islam',
-                'O', 'Aktif', 'Jl. Merdeka No. 1, Kudus',
-                '01/01/2024', '01/01/2026',
-            ]);
-
-            $writer->close();
-
-        }, $filename, [
-            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        ]);
-    }
-
-    // ── EXPORT PDF ───────────────────────────────────────────────────────────
-
-    public function exportPdf(Request $request)
-    {
-        $query = Karyawan::with(['jabatan', 'pendidikan', 'jenisKontrak', 'golongan']);
-
-        if ($request->filled('status'))   $query->where('status_aktif', $request->status);
-        if ($request->filled('jabatan'))  $query->where('id_jabatan',   $request->jabatan);
-        if ($request->filled('golongan')) $query->where('id_golongan',  $request->golongan);
-
-        $karyawans = $query->orderBy('nama_lengkap')->get();
-
-        $filterInfo = [];
-        if ($request->filled('status'))   $filterInfo[] = 'Status: ' . $request->status;
-        if ($request->filled('jabatan')) {
-            $j = Jabatan::find($request->jabatan);
-            if ($j) $filterInfo[] = 'Jabatan: ' . $j->nama_jabatan;
-        }
-        if ($request->filled('golongan')) {
-            $g = Golongan::find($request->golongan);
-            if ($g) $filterInfo[] = 'Golongan: ' . $g->nama_golongan . ' (' . $g->tipe . ')';
-        }
-
-        $pdf = Pdf::loadView('karyawan.pdf', compact('karyawans', 'filterInfo'))
-            ->setPaper('a4', 'landscape');
-
-        return $pdf->download('karyawan_' . now()->format('Ymd_His') . '.pdf');
-    }
 
     // ── HAPUS FOTO ───────────────────────────────────────────────────────────
 
@@ -287,19 +274,19 @@ class KaryawanController extends Controller
             'jenis_kelamin'          => 'nullable|in:Laki-laki,Perempuan',
             'tanggal_lahir'          => 'nullable|date|before:today',
             'tanggal_masuk'          => 'required|date',
-            'tanggal_mulai_golongan' => 'required|date',
             'alamat'                 => 'nullable|string',
             'agama'                  => 'nullable|string|max:50',
             'golongan_darah'         => 'nullable|string|max:2',
             'id_jabatan'             => 'nullable|exists:jabatans,id_jabatan',
             'id_pendidikan'          => 'nullable|exists:pendidikans,id_pendidikan',
             'id_jenis_kontrak'       => 'nullable|exists:jenis_kontraks,id_jenis_kontrak',
-            'id_golongan'            => 'nullable|exists:golongans,id_golongan',
+            'id_golongan'            => 'nullable|exists:golongans,id_golongan|required_with:tanggal_golongan_berikutnya',
             'status_aktif'           => 'required|in:Aktif,Pensiun',
             'foto'                   => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
-            // Jadwal kenaikan berkala
-            'tanggal_berkala_terakhir'   => 'nullable|date',
-            'tanggal_berkala_berikutnya' => 'nullable|date',
+            // Jadwal kenaikan berkala awal (hanya dipakai di store(), lihat catatan di sana)
+            'tanggal_berkala_berikutnya'  => 'nullable|date',
+            // Jadwal kenaikan golongan awal — id_golongan wajib diisi jika field ini diisi
+            'tanggal_golongan_berikutnya' => 'nullable|date',
         ];
     }
 }

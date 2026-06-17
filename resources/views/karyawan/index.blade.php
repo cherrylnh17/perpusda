@@ -68,7 +68,7 @@
                         <select name="status" onchange="this.form.submit()"
                                 class="text-sm border border-gray-200 rounded-xl px-3 py-2.5 focus:ring-2 focus:ring-blue-500 outline-none text-gray-600 bg-white">
                             <option value="">Semua Status</option>
-                            @foreach (['Aktif','Cuti','Pensiun','Resign'] as $s)
+                            @foreach (['Aktif','Pensiun'] as $s)
                             <option value="{{ $s }}" {{ request('status') == $s ? 'selected' : '' }}>{{ $s }}</option>
                             @endforeach
                         </select>
@@ -136,7 +136,6 @@
 
                 {{-- Row 2: Tombol Aksi --}}
                 <div class="flex flex-wrap gap-2 mt-4 pt-4 border-t border-gray-100">
-
                     <a href="{{ route('karyawan.create') }}"
                        class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-xl transition-colors">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -145,37 +144,11 @@
                         Tambah Karyawan
                     </a>
 
-                    {{-- <a href="{{ route('karyawan.export.excel', request()->query()) }}"
-                       class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-xl transition-colors">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                        </svg>
-                        Export Excel
-                    </a> --}}
-
-                    {{-- <a href="{{ route('karyawan.export.pdf', request()->query()) }}" target="_blank"
-                       class="inline-flex items-center gap-2 px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-sm font-medium rounded-xl transition-colors">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
-                        </svg>
-                        Export PDF
-                    </a> --}}
-
-                    {{-- <button onclick="document.getElementById('modalImport').classList.remove('hidden')"
-                            class="inline-flex items-center gap-2 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-sm font-medium rounded-xl transition-colors">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
-                        </svg>
-                        Import Excel
-                    </button> --}}
-
-                    {{-- <a href="{{ route('karyawan.template') }}"
-                       class="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-600 text-sm font-medium rounded-xl transition-colors">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-                        </svg>
-                        Template Import
-                    </a> --}}
+                    {{-- Export/Import diaktifkan kembali sesuai kebutuhan --}}
+                    {{-- <a href="{{ route('karyawan.export.excel', request()->query()) }}" ...> --}}
+                    {{-- <a href="{{ route('karyawan.export.pdf',   request()->query()) }}" ...> --}}
+                    {{-- <button onclick="..." > Import Excel </button> --}}
+                    {{-- <a href="{{ route('karyawan.template') }}" ...> Template Import </a> --}}
                 </div>
             </div>
 
@@ -214,16 +187,24 @@
                         <tbody class="divide-y divide-gray-50">
                             @forelse ($karyawans as $k)
                             @php
-                                $today = now()->startOfDay();
+                                $today   = now()->startOfDay();
                                 $batas30 = now()->addDays(30)->startOfDay();
 
-                                $berkalaDue  = $k->tanggal_berkala_berikutnya;
-                                $berkalaH30  = $berkalaDue && $berkalaDue->gte($today) && $berkalaDue->lte($batas30);
-                                $berkalaSisa = $berkalaDue ? $today->diffInDays($berkalaDue, false) : null;
+                                // ── Berkala: baca dari relasi kenaikanBerkalaAktif ──
+                                $berkalaAktif = $k->kenaikanBerkalaAktif;
+                                $berkalaDue   = $berkalaAktif?->tanggal_berikutnya;
+                                $berkalaH30   = $berkalaDue
+                                                && $berkalaDue->gte($today)
+                                                && $berkalaDue->lte($batas30);
+                                $berkalaSisa  = $berkalaDue
+                                                ? $today->diffInDays($berkalaDue, false)
+                                                : null;
+                                $berkalaStatus = $berkalaAktif?->status; // scheduled | pending
 
-                                $golonganPending = $k->pengajuanGolonganPending;
+                                // ── Golongan: baca dari relasi kenaikanGolonganAktif ──
+                                $golonganAktif = $k->kenaikanGolonganAktif;
                             @endphp
-                            <tr class="hover:bg-gray-50/60 transition-colors group {{ ($berkalaH30 || $golonganPending) ? 'bg-amber-50/30' : '' }}">
+                            <tr class="hover:bg-gray-50/60 transition-colors group {{ ($berkalaH30 || $berkalaAktif?->isPending() || $golonganAktif) ? 'bg-amber-50/30' : '' }}">
 
                                 <td class="px-5 py-3 text-gray-400 text-xs">
                                     {{ $karyawans->firstItem() + $loop->index }}
@@ -279,12 +260,23 @@
                                     {{ $k->tanggal_masuk?->format('d M Y') }}
                                 </td>
 
-                                {{-- Kolom Kenaikan (Badge Berkala H-30 & Pengajuan Golongan) --}}
+                                {{-- Kolom Kenaikan --}}
                                 <td class="px-5 py-3">
                                     <div class="flex flex-col gap-1 items-center">
+
                                         {{-- Badge Kenaikan Berkala --}}
-                                        @if ($berkalaDue)
-                                            @if ($berkalaH30)
+                                        @if ($berkalaAktif)
+                                            @if ($berkalaAktif->isPending())
+                                                {{-- Menunggu persetujuan --}}
+                                                <span title="Kenaikan berkala menunggu persetujuan: {{ $berkalaDue?->format('d M Y') }}"
+                                                      class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-orange-100 text-orange-700 whitespace-nowrap">
+                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                                    </svg>
+                                                    Berkala: Pending
+                                                </span>
+                                            @elseif ($berkalaH30)
+                                                {{-- Scheduled dan H-30 --}}
                                                 <span title="Kenaikan berkala: {{ $berkalaDue->format('d M Y') }}"
                                                       class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-700 whitespace-nowrap">
                                                     <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -293,24 +285,27 @@
                                                     Berkala H-{{ $berkalaSisa }}
                                                 </span>
                                             @else
+                                                {{-- Scheduled, masih lama --}}
                                                 <span class="text-xs text-gray-400 whitespace-nowrap">
-                                                    🗓️ {{ $berkalaDue->format('d M Y') }}
+                                                    🗓️ {{ $berkalaDue?->format('d M Y') }}
                                                 </span>
                                             @endif
                                         @endif
 
-                                        {{-- Badge Pengajuan Golongan Pending --}}
-                                        @if ($golonganPending)
-                                            <span title="Pengajuan golongan ke {{ $golonganPending->golonganBaru?->nama_golongan }} ({{ $golonganPending->tanggal_efektif?->format('d M Y') }})"
-                                                  class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-700 whitespace-nowrap">
+                                        {{-- Badge Golongan Pending/Scheduled --}}
+                                        @if ($golonganAktif)
+                                            <span title="Jadwal kenaikan golongan: {{ $golonganAktif->tanggal_berikutnya?->format('d M Y') }}"
+                                                  class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold
+                                                         {{ $golonganAktif->isPending() ? 'bg-blue-100 text-blue-700' : 'bg-indigo-50 text-indigo-500' }}
+                                                         whitespace-nowrap">
                                                 <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
                                                 </svg>
-                                                Golongan: Pending
+                                                {{ $golonganAktif->isPending() ? 'Golongan: Pending' : 'Golongan: Terjadwal' }}
                                             </span>
                                         @endif
 
-                                        @if (!$berkalaDue && !$golonganPending)
+                                        @if (!$berkalaAktif && !$golonganAktif)
                                             <span class="text-xs text-gray-300">—</span>
                                         @endif
                                     </div>
@@ -321,9 +316,7 @@
                                     @php
                                         $badge = match($k->status_aktif) {
                                             'Aktif'   => 'bg-green-100 text-green-700',
-                                            'Cuti'    => 'bg-yellow-100 text-yellow-700',
                                             'Pensiun' => 'bg-gray-100 text-gray-500',
-                                            'Resign'  => 'bg-red-100 text-red-600',
                                             default   => 'bg-gray-100 text-gray-500',
                                         };
                                     @endphp
@@ -425,8 +418,11 @@
 
                 <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-700 mb-4">
                     <p class="font-semibold mb-1">Kolom wajib:</p>
-                    <p><strong>nip, nik, nama_lengkap, tgl_masuk, tgl_mulai_jabatan</strong></p>
-                    <p class="mt-1 text-amber-600">Kolom jadwal kenaikan berkala: <strong>tgl_berkala_terakhir</strong> & <strong>tgl_berkala_berikutnya</strong>. Download template untuk format lengkap.</p>
+                    <p><strong>nip, nik, nama_lengkap, tgl_masuk</strong></p>
+                    <p class="mt-1 text-amber-600">
+                        Jadwal berkala: <strong>tgl_berkala_berikutnya</strong> (opsional, akan dibuat otomatis di tabel kenaikan).
+                        Download template untuk format lengkap.
+                    </p>
                 </div>
 
                 <div class="flex gap-3">

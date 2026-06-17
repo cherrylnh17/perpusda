@@ -97,7 +97,7 @@
                             @forelse ($notifikasiKenaikan as $notif)
                             @php
                                 $sisa = \Carbon\Carbon::today()->diffInDays($notif->tanggal_kenaikan, false);
-                                $isGaji = $notif->tipe === 'gaji';
+                                $isGaji = $notif->tipe === 'berkala';
                                 $iconBg = $isGaji ? 'bg-green-100' : 'bg-violet-100';
                                 $iconColor = $isGaji ? 'text-green-600' : 'text-violet-600';
                                 $badgeColor = $sisa <= 7 ? 'text-red-600 bg-red-50' : ($sisa <= 14 ? 'text-amber-600 bg-amber-50' : 'text-blue-600 bg-blue-50');

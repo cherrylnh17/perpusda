@@ -46,16 +46,8 @@ return new class extends Migration
                 ->nullOnDelete()
                 ->cascadeOnUpdate();
 
-            $table->enum('status_aktif', ['Aktif',  'Pensiun'])
+            $table->enum('status_aktif', ['Aktif', 'Pensiun'])
                 ->default('Aktif');
-
-            // Jadwal kenaikan berkala (tiap 2 tahun)
-            // Tanggal berkala terakhir disetujui → baseline periode berikutnya
-            $table->date('tanggal_berkala_terakhir')->nullable();
-            $table->date('tanggal_berkala_berikutnya')->nullable();
-
-            // Jabatan
-            $table->date('tanggal_mulai_golongan');
 
             $table->timestamps();
         });

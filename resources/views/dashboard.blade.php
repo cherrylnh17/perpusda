@@ -145,7 +145,7 @@
         {{-- List --}}
         @forelse ($karyawanNaikBerkala as $k)
         @php
-            $sisa = (int) now()->startOfDay()->diffInDays($k->tanggal_berkala_berikutnya, false);
+            $sisa = (int) now()->startOfDay()->diffInDays($k->kenaikanBerkalaAktif->tanggal_berikutnya, false);
             if ($sisa <= 7) {
                 $pill  = 'bg-red-100 text-red-700';
                 $pulse = 'animate-pulse';
@@ -182,7 +182,7 @@
                     H-{{ $sisa }}
                 </span>
                 <p class="text-xs text-gray-400 mt-0.5">
-                    {{ \Carbon\Carbon::parse($k->tanggal_berkala_berikutnya)->format('d M Y') }}
+                    {{ $k->kenaikanBerkalaAktif->tanggal_berikutnya->format('d M Y') }}
                 </p>
             </div>
         </div>
@@ -243,8 +243,8 @@
         {{-- List --}}
         @forelse ($karyawanNaikGolongan as $k)
         @php
-            $pengajuan   = $k->pengajuanGolonganPending;
-            $tglEfektif  = $pengajuan?->tanggal_efektif;
+            $kgAktif    = $k->kenaikanGolonganAktif;
+            $tglEfektif = $kgAktif?->tanggal_berikutnya;
             $sisaG       = $tglEfektif
                 ? (int) now()->startOfDay()->diffInDays($tglEfektif, false)
                 : null;
@@ -278,11 +278,11 @@
                 <p class="text-sm font-medium text-gray-800 truncate">{{ $k->nama_lengkap }}</p>
                 <div class="flex items-center gap-1 mt-0.5">
                     <span class="text-xs text-gray-400 truncate">{{ $k->golongan?->nama_golongan ?? '-' }}</span>
-                    @if($pengajuan?->golonganBaru)
+                    @if($kgAktif?->golonganBaru)
                     <svg class="w-3 h-3 text-gray-300 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
                     </svg>
-                    <span class="text-xs text-violet-600 font-semibold truncate">{{ $pengajuan->golonganBaru->nama_golongan }}</span>
+                    <span class="text-xs text-violet-600 font-semibold truncate">{{ $kgAktif->golonganBaru->nama_golongan }}</span>
                     @endif
                 </div>
             </div>

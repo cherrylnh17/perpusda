@@ -9,27 +9,26 @@ return new class extends Migration
     public function up(): void
     {
         /**
-         * Pengajuan Kenaikan Berkala
+         * Kenaikan Berkala
          * ─────────────────────────────────────────────────────────────────
-         * Kenaikan gaji rutin tiap 2 tahun. Nominal gaji tidak disimpan
-         * di sini (privasi). Tabel ini hanya mencatat bahwa karyawan
-         * sudah memenuhi syarat dan pengajuan telah disetujui.
+         * Kenaikan gaji rutin tiap 2 tahun.
          *
-         * Setelah diterima:
-         *   - tanggal_efektif disalin ke karyawans.tanggal_berkala_terakhir
-         *   - tanggal_berkala_berikutnya diupdate (+2 tahun)
+         * Status flow:
+         *   scheduled → (cron harian, now >= tanggal_berikutnya) → pending
+         *   pending   → diterima → sistem insert row baru (scheduled, +2 tahun)
+         *   pending   → stop     → tidak ada row baru (sudah maksimal)
          */
-        Schema::create('pengajuan_kenaikan_berkalas', function (Blueprint $table) {
-            $table->id('id_pengajuan_berkala');
+        Schema::create('kenaikan_berkalas', function (Blueprint $table) {
+            $table->id('id_berkala');
 
             $table->foreignId('id_karyawan')
                 ->constrained('karyawans', 'id_karyawan')
                 ->cascadeOnDelete();
 
-            // Periode yang diajukan
-            $table->date('tanggal_efektif');
+            $table->date('tanggal_berikutnya');
 
-            $table->enum('status', ['pending', 'diterima'])->default('pending');
+            $table->enum('status', ['scheduled', 'pending', 'diterima', 'stop'])
+                ->default('scheduled');
 
             $table->text('catatan')->nullable();
 
@@ -41,39 +40,44 @@ return new class extends Migration
 
             $table->timestamps();
 
-            // 1 karyawan hanya boleh punya 1 pengajuan berkala pending
-            $table->unique(['id_karyawan', 'status'], 'unique_berkala_pending');
+            $table->index(['id_karyawan', 'status']);
+            $table->index('tanggal_berikutnya');
         });
 
         /**
-         * Pengajuan Kenaikan Golongan
+         * Kenaikan Golongan
          * ─────────────────────────────────────────────────────────────────
          * Kenaikan grade/level internal (misal I/A → I/B).
          *
-         * Setelah diterima:
-         *   - karyawans.id_golongan diupdate ke golongan_baru_id
-         *   - record disalin ke histori_golongans
+         * Status flow:
+         *   scheduled → (cron harian, now >= tanggal_berikutnya) → pending
+         *   pending   → diterima → update id_golongan karyawan
+         *                        → insert ke histori_golongans
+         *                        → admin set tanggal_berikutnya baru (insert row scheduled baru)
+         *                           atau dibiarkan null (sudah golongan teratas)
+         *   pending   → stop     → tidak ada row baru
          */
-        Schema::create('pengajuan_kenaikan_golongans', function (Blueprint $table) {
-            $table->id('id_pengajuan_golongan');
+        Schema::create('kenaikan_golongans', function (Blueprint $table) {
+            $table->id('id_golongan_kenaikan');
 
             $table->foreignId('id_karyawan')
                 ->constrained('karyawans', 'id_karyawan')
                 ->cascadeOnDelete();
 
-            // Snapshot golongan sebelum naik
+            // Snapshot golongan sebelum naik (diisi saat pending/diterima)
             $table->foreignId('golongan_lama_id')->nullable()
                 ->constrained('golongans', 'id_golongan')
                 ->nullOnDelete();
 
-            // Golongan yang diusulkan
+            // Golongan yang diusulkan (diisi saat approve)
             $table->foreignId('golongan_baru_id')->nullable()
                 ->constrained('golongans', 'id_golongan')
                 ->nullOnDelete();
 
-            $table->date('tanggal_efektif');
+            $table->date('tanggal_berikutnya');
 
-            $table->enum('status', ['pending', 'diterima'])->default('pending');
+            $table->enum('status', ['scheduled', 'pending', 'diterima', 'stop'])
+                ->default('scheduled');
 
             $table->text('catatan')->nullable();
 
@@ -85,15 +89,15 @@ return new class extends Migration
 
             $table->timestamps();
 
-            // 1 karyawan hanya boleh punya 1 pengajuan golongan pending
-            $table->unique(['id_karyawan', 'status'], 'unique_golongan_pending');
+            $table->index(['id_karyawan', 'status']);
+            $table->index('tanggal_berikutnya');
         });
 
         /**
          * Histori Golongan
          * ─────────────────────────────────────────────────────────────────
-         * Setiap kali pengajuan kenaikan golongan diterima, satu baris
-         * dicatat di sini sebagai riwayat permanen.
+         * Setiap kali kenaikan golongan diterima, satu baris dicatat
+         * di sini sebagai riwayat permanen.
          */
         Schema::create('histori_golongans', function (Blueprint $table) {
             $table->id('id_histori');
@@ -112,9 +116,9 @@ return new class extends Migration
 
             $table->date('tanggal_efektif');
 
-            // Referensi ke pengajuan asalnya (opsional, untuk audit)
-            $table->foreignId('id_pengajuan_golongan')->nullable()
-                ->constrained('pengajuan_kenaikan_golongans', 'id_pengajuan_golongan')
+            // Referensi ke pengajuan asal (untuk audit)
+            $table->foreignId('id_golongan_kenaikan')->nullable()
+                ->constrained('kenaikan_golongans', 'id_golongan_kenaikan')
                 ->nullOnDelete();
 
             $table->foreignId('dicatat_oleh')->nullable()
@@ -130,7 +134,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('histori_golongans');
-        Schema::dropIfExists('pengajuan_kenaikan_golongans');
-        Schema::dropIfExists('pengajuan_kenaikan_berkalas');
+        Schema::dropIfExists('kenaikan_golongans');
+        Schema::dropIfExists('kenaikan_berkalas');
     }
 };

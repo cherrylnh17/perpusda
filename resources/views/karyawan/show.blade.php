@@ -55,25 +55,37 @@
                 </div>
             </div>
 
-            {{-- ── Jadwal & Pengajuan Kenaikan ──────────────────────────────── --}}
+            {{-- ── Jadwal & Status Kenaikan ──────────────────────────────────── --}}
             @php
-                $today       = now()->startOfDay();
-                $berkalaDue  = $karyawan->tanggal_berkala_berikutnya;
-                $berkalaSisa = $berkalaDue ? $today->diffInDays($berkalaDue, false) : null;
+                $today        = now()->startOfDay();
+                $berkalaAktif = $karyawan->kenaikanBerkalaAktif;
+                $golonganAktif = $karyawan->kenaikanGolonganAktif;
+                $berkalaDue   = $berkalaAktif?->tanggal_berikutnya;
+                $berkalaSisa  = $berkalaDue ? $today->diffInDays($berkalaDue, false) : null;
+                $golonganDue  = $golonganAktif?->tanggal_berikutnya;
+                $golonganSisa = $golonganDue ? $today->diffInDays($golonganDue, false) : null;
             @endphp
 
-            @if ($berkalaDue || $karyawan->pengajuanBerkalaPending || $karyawan->pengajuanGolonganPending)
+            @if ($berkalaAktif || $golonganAktif)
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
-                {{-- Countdown Kenaikan Berkala --}}
-                @if ($berkalaDue)
+                {{-- Kartu Kenaikan Berkala --}}
+                @if ($berkalaAktif)
                 @php
-                    $bWarna = $berkalaSisa !== null && $berkalaSisa <= 30 && $berkalaSisa >= 0
-                        ? 'bg-amber-50 border-amber-200'
-                        : ($berkalaSisa < 0 ? 'bg-gray-50 border-gray-200' : 'bg-green-50 border-green-200');
-                    $bTextWarna = $berkalaSisa !== null && $berkalaSisa <= 30 && $berkalaSisa >= 0
-                        ? 'text-amber-700'
-                        : ($berkalaSisa < 0 ? 'text-gray-500' : 'text-green-700');
+                    $isPendingBerkala = $berkalaAktif->status === 'pending';
+                    if ($isPendingBerkala) {
+                        $bWarna = 'bg-yellow-50 border-yellow-200';
+                        $bTextWarna = 'text-yellow-700';
+                    } elseif ($berkalaSisa !== null && $berkalaSisa <= 30 && $berkalaSisa >= 0) {
+                        $bWarna = 'bg-amber-50 border-amber-200';
+                        $bTextWarna = 'text-amber-700';
+                    } elseif ($berkalaSisa !== null && $berkalaSisa < 0) {
+                        $bWarna = 'bg-gray-50 border-gray-200';
+                        $bTextWarna = 'text-gray-500';
+                    } else {
+                        $bWarna = 'bg-green-50 border-green-200';
+                        $bTextWarna = 'text-green-700';
+                    }
                 @endphp
                 <div class="rounded-2xl border {{ $bWarna }} p-5">
                     <div class="flex items-center gap-3 mb-3">
@@ -83,14 +95,16 @@
                             </svg>
                         </div>
                         <p class="text-xs font-semibold text-gray-600 uppercase tracking-wide">Kenaikan Berkala Berikutnya</p>
-                        @if ($berkalaSisa !== null && $berkalaSisa <= 30 && $berkalaSisa >= 0)
+                        @if ($isPendingBerkala)
+                            <span class="ml-auto px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-700 text-xs font-bold">Menunggu Approval</span>
+                        @elseif ($berkalaSisa !== null && $berkalaSisa <= 30 && $berkalaSisa >= 0)
                             <span class="ml-auto px-2 py-0.5 rounded-full bg-amber-200 text-amber-800 text-xs font-bold">H-{{ $berkalaSisa }}</span>
                         @endif
                     </div>
                     <p class="text-sm font-bold {{ $bTextWarna }}">{{ $berkalaDue->format('d F Y') }}</p>
                     <p class="text-xs text-gray-500 mt-1">
-                        @if ($berkalaSisa === null)
-                            —
+                        @if ($isPendingBerkala)
+                            Menunggu persetujuan admin
                         @elseif ($berkalaSisa < 0)
                             Sudah lewat {{ abs($berkalaSisa) }} hari lalu
                         @elseif ($berkalaSisa === 0)
@@ -99,59 +113,71 @@
                             {{ $berkalaSisa }} hari lagi
                         @endif
                     </p>
-                    @if ($karyawan->tanggal_berkala_terakhir)
-                        <p class="text-xs text-gray-400 mt-2 pt-2 border-t border-white/60">
-                            Terakhir disetujui: {{ $karyawan->tanggal_berkala_terakhir->format('d F Y') }}
+                    @if ($berkalaAktif->catatan)
+                        <p class="text-xs text-gray-400 mt-2 pt-2 border-t border-white/60 italic">{{ $berkalaAktif->catatan }}</p>
+                    @endif
+                </div>
+                @endif
+
+                {{-- Kartu Kenaikan Golongan --}}
+                @if ($golonganAktif)
+                @php
+                    $isPendingGolongan = $golonganAktif->status === 'pending';
+                    if ($isPendingGolongan) {
+                        $gWarna = 'bg-yellow-50 border-yellow-200';
+                        $gTextWarna = 'text-yellow-700';
+                    } elseif ($golonganSisa !== null && $golonganSisa <= 30 && $golonganSisa >= 0) {
+                        $gWarna = 'bg-purple-50 border-purple-200';
+                        $gTextWarna = 'text-purple-700';
+                    } elseif ($golonganSisa !== null && $golonganSisa < 0) {
+                        $gWarna = 'bg-gray-50 border-gray-200';
+                        $gTextWarna = 'text-gray-500';
+                    } else {
+                        $gWarna = 'bg-purple-50 border-purple-100';
+                        $gTextWarna = 'text-purple-600';
+                    }
+                @endphp
+                <div class="rounded-2xl border {{ $gWarna }} p-5">
+                    <div class="flex items-center gap-3 mb-3">
+                        <div class="w-8 h-8 rounded-xl bg-white/80 flex items-center justify-center shadow-sm">
+                            <svg class="w-4 h-4 {{ $gTextWarna }}" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l7.5-7.5 7.5 7.5"/>
+                            </svg>
+                        </div>
+                        <p class="text-xs font-semibold text-gray-600 uppercase tracking-wide">Kenaikan Golongan Berikutnya</p>
+                        @if ($isPendingGolongan)
+                            <span class="ml-auto px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-700 text-xs font-bold">Menunggu Approval</span>
+                        @elseif ($golonganSisa !== null && $golonganSisa <= 30 && $golonganSisa >= 0)
+                            <span class="ml-auto px-2 py-0.5 rounded-full bg-purple-200 text-purple-800 text-xs font-bold">H-{{ $golonganSisa }}</span>
+                        @endif
+                    </div>
+                    {{-- Tampilkan golongan lama → baru jika pending dan sudah ada golongan_baru_id --}}
+                    @if ($isPendingGolongan && $golonganAktif->golonganBaru)
+                        <div class="flex items-center gap-2 text-sm font-bold {{ $gTextWarna }}">
+                            <span>{{ $golonganAktif->golonganLama?->nama_golongan ?? $karyawan->golongan?->nama_golongan ?? '-' }}</span>
+                            <svg class="w-3.5 h-3.5 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+                            </svg>
+                            <span>{{ $golonganAktif->golonganBaru->nama_golongan }}</span>
+                        </div>
+                    @else
+                        <p class="text-sm font-bold {{ $gTextWarna }}">
+                            Dari: {{ $golonganAktif->golonganLama?->nama_golongan ?? $karyawan->golongan?->nama_golongan ?? '-' }}
                         </p>
                     @endif
-                </div>
-                @endif
-
-                {{-- Pengajuan Kenaikan Golongan (Pending) --}}
-                @if ($karyawan->pengajuanGolonganPending)
-                <div class="rounded-2xl border bg-blue-50 border-blue-200 p-5">
-                    <div class="flex items-center gap-3 mb-3">
-                        <div class="w-8 h-8 rounded-xl bg-white/80 flex items-center justify-center shadow-sm">
-                            <svg class="w-4 h-4 text-blue-700" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                            </svg>
-                        </div>
-                        <p class="text-xs font-semibold text-gray-600 uppercase tracking-wide">Pengajuan Kenaikan Golongan</p>
-                        <span class="ml-auto px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-700 text-xs font-bold">Pending</span>
-                    </div>
-                    <div class="flex items-center gap-2 text-sm font-bold text-blue-700">
-                        <span>{{ $karyawan->pengajuanGolonganPending->golonganLama?->nama_golongan ?? '-' }}</span>
-                        <svg class="w-3.5 h-3.5 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
-                        </svg>
-                        <span>{{ $karyawan->pengajuanGolonganPending->golonganBaru?->nama_golongan ?? '-' }}</span>
-                    </div>
                     <p class="text-xs text-gray-500 mt-1">
-                        Efektif: {{ $karyawan->pengajuanGolonganPending->tanggal_efektif->format('d F Y') }}
+                        @if ($isPendingGolongan)
+                            Menunggu persetujuan admin
+                        @elseif ($golonganSisa < 0)
+                            Sudah lewat {{ abs($golonganSisa) }} hari lalu
+                        @elseif ($golonganSisa === 0)
+                            Hari ini — {{ $golonganDue->format('d F Y') }}
+                        @else
+                            {{ $golonganDue->format('d F Y') }} &middot; {{ $golonganSisa }} hari lagi
+                        @endif
                     </p>
-                    @if ($karyawan->pengajuanGolonganPending->catatan)
-                        <p class="text-xs text-gray-400 mt-1 italic">{{ $karyawan->pengajuanGolonganPending->catatan }}</p>
-                    @endif
-                </div>
-                @endif
-
-                {{-- Pengajuan Kenaikan Berkala (Pending) --}}
-                @if ($karyawan->pengajuanBerkalaPending)
-                <div class="rounded-2xl border bg-amber-50 border-amber-200 p-5">
-                    <div class="flex items-center gap-3 mb-3">
-                        <div class="w-8 h-8 rounded-xl bg-white/80 flex items-center justify-center shadow-sm">
-                            <svg class="w-4 h-4 text-amber-700" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                            </svg>
-                        </div>
-                        <p class="text-xs font-semibold text-gray-600 uppercase tracking-wide">Pengajuan Kenaikan Berkala</p>
-                        <span class="ml-auto px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-700 text-xs font-bold">Pending</span>
-                    </div>
-                    <p class="text-sm font-bold text-amber-700">
-                        Efektif: {{ $karyawan->pengajuanBerkalaPending->tanggal_efektif->format('d F Y') }}
-                    </p>
-                    @if ($karyawan->pengajuanBerkalaPending->catatan)
-                        <p class="text-xs text-gray-400 mt-1 italic">{{ $karyawan->pengajuanBerkalaPending->catatan }}</p>
+                    @if ($golonganAktif->catatan)
+                        <p class="text-xs text-gray-400 mt-2 pt-2 border-t border-white/60 italic">{{ $golonganAktif->catatan }}</p>
                     @endif
                 </div>
                 @endif
@@ -221,10 +247,6 @@
                             <dt class="text-gray-500">Tanggal Masuk</dt>
                             <dd class="text-gray-800">{{ $karyawan->tanggal_masuk?->format('d F Y') ?? '-' }}</dd>
                         </div>
-                        <div class="flex justify-between gap-4">
-                            <dt class="text-gray-500">Mulai Golongan</dt>
-                            <dd class="text-gray-800">{{ $karyawan->tanggal_mulai_golongan?->format('d F Y') ?? '-' }}</dd>
-                        </div>
                         @if ($karyawan->jenisKontrak?->jam_kerja_sehari)
                         <div class="flex justify-between gap-4">
                             <dt class="text-gray-500">Jam Kerja / Hari</dt>
@@ -236,7 +258,7 @@
             </div>
 
             {{-- ── Riwayat Kenaikan Berkala ─────────────────────────────────── --}}
-            @if ($karyawan->pengajuanBerkalas->isNotEmpty())
+            @if ($karyawan->kenaikanBerkalas->isNotEmpty())
             <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                 <div class="flex items-center gap-3 px-6 py-4 border-b border-gray-100">
                     <div class="w-7 h-7 rounded-lg bg-amber-50 flex items-center justify-center text-amber-600 flex-shrink-0">
@@ -248,20 +270,29 @@
                     <span class="ml-auto text-xs text-gray-400">5 terbaru</span>
                 </div>
                 <div class="divide-y divide-gray-50">
-                    @foreach ($karyawan->pengajuanBerkalas as $berkala)
+                    @foreach ($karyawan->kenaikanBerkalas as $berkala)
                     <div class="px-6 py-3 flex items-center gap-4 text-sm">
                         <div class="flex-1">
                             <div class="flex items-center gap-2 flex-wrap">
-                                <span class="text-gray-400 text-xs">{{ $berkala->tanggal_efektif?->format('d M Y') }}</span>
+                                <span class="text-gray-400 text-xs">{{ $berkala->tanggal_berikutnya?->format('d M Y') }}</span>
                                 @php
                                     $bBadge = match($berkala->status) {
-                                        'approved' => 'bg-green-100 text-green-700',
-                                        'rejected' => 'bg-red-100 text-red-600',
-                                        default    => 'bg-yellow-100 text-yellow-700',
+                                        'diterima'  => 'bg-green-100 text-green-700',
+                                        'stop'      => 'bg-red-100 text-red-600',
+                                        'pending'   => 'bg-yellow-100 text-yellow-700',
+                                        'scheduled' => 'bg-blue-100 text-blue-600',
+                                        default     => 'bg-gray-100 text-gray-500',
+                                    };
+                                    $bLabel = match($berkala->status) {
+                                        'diterima'  => 'Disetujui',
+                                        'stop'      => 'Dihentikan',
+                                        'pending'   => 'Menunggu',
+                                        'scheduled' => 'Terjadwal',
+                                        default     => ucfirst($berkala->status),
                                     };
                                 @endphp
                                 <span class="px-1.5 py-0.5 rounded text-xs font-semibold {{ $bBadge }}">
-                                    {{ ucfirst($berkala->status) }}
+                                    {{ $bLabel }}
                                 </span>
                             </div>
                             @if ($berkala->catatan)

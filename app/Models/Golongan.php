@@ -25,14 +25,14 @@ class Golongan extends Model
         return $this->hasMany(Karyawan::class, 'id_golongan', 'id_golongan');
     }
 
-    public function pengajuanSebagaiLama(): HasMany
+    public function kenaikanSebagaiLama(): HasMany
     {
-        return $this->hasMany(PengajuanKenaikanGolongan::class, 'golongan_lama_id', 'id_golongan');
+        return $this->hasMany(KenaikanGolongan::class, 'golongan_lama_id', 'id_golongan');
     }
 
-    public function pengajuanSebagaiBaru(): HasMany
+    public function kenaikanSebagaiBaru(): HasMany
     {
-        return $this->hasMany(PengajuanKenaikanGolongan::class, 'golongan_baru_id', 'id_golongan');
+        return $this->hasMany(KenaikanGolongan::class, 'golongan_baru_id', 'id_golongan');
     }
 
     public function historiSebagaiLama(): HasMany

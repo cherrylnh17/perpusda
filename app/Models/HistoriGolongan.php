@@ -14,7 +14,7 @@ class HistoriGolongan extends Model
         'golongan_lama_id',
         'golongan_baru_id',
         'tanggal_efektif',
-        'id_pengajuan_golongan',
+        'id_golongan_kenaikan',
         'dicatat_oleh',
     ];
 
@@ -39,9 +39,9 @@ class HistoriGolongan extends Model
         return $this->belongsTo(Golongan::class, 'golongan_baru_id', 'id_golongan');
     }
 
-    public function pengajuan(): BelongsTo
+    public function kenaikanGolongan(): BelongsTo
     {
-        return $this->belongsTo(PengajuanKenaikanGolongan::class, 'id_pengajuan_golongan', 'id_pengajuan_golongan');
+        return $this->belongsTo(KenaikanGolongan::class, 'id_golongan_kenaikan', 'id_golongan_kenaikan');
     }
 
     public function dicatatByUser(): BelongsTo

@@ -223,7 +223,7 @@
                                 </div>
 
                                 <div>
-                                    <label class="block text-xs font-semibold text-gray-600 mb-1.5">Pendidikan</label>
+                                    <label class="block text-xs font-semibold text-gray-600 mb-1.5">Pendidikan Terakhir</label>
                                     <x-searchable-select name="id_pendidikan" id="ss-pendidikan"
                                         placeholder="— Pilih Pendidikan —"
                                         :selected="old('id_pendidikan', '')"
@@ -282,7 +282,7 @@
                                                 'Pensiun' => 'bg-violet-50 border-violet-400 text-violet-700',
                                             ];
                                             $statusDots = [
-                                                'Aktif' => 'bg-emerald-500',
+                                                'Aktif'   => 'bg-emerald-500',
                                                 'Pensiun' => 'bg-violet-500',
                                             ];
                                         @endphp
@@ -314,22 +314,18 @@
                                     @enderror
                                 </div>
 
-                                <div>
-                                    <label class="block text-xs font-semibold text-gray-600 mb-1.5">
-                                        Tanggal Mulai Golongan <span class="text-red-500">*</span>
-                                    </label>
-                                    <input type="date" name="tanggal_mulai_golongan" value="{{ old('tanggal_mulai_golongan') }}"
-                                           class="w-full px-3.5 py-2.5 text-sm border rounded-xl bg-white text-gray-900 outline-none transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('tanggal_mulai_golongan') border-red-400 ring-2 ring-red-100 @else border-gray-300 @enderror">
-                                    @error('tanggal_mulai_golongan')
-                                        <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
-                                    @enderror
-                                </div>
-
                             </div>
                         </div>
                     </div>
 
-                    {{-- 4. Jadwal Kenaikan Berkala ─────────────────────────────────── --}}
+                    {{-- 4. Jadwal Kenaikan ──────────────────────────────────────────── --}}
+                    {{--
+                        Dua kartu terpisah: berkala & golongan.
+                        Masing-masing membuat satu baris di tabel masing-masing
+                        dengan status 'scheduled' (atau 'pending' jika sudah lewat).
+                    --}}
+
+                    {{-- 4a. Jadwal Kenaikan Berkala Awal --}}
                     <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
                         <div class="flex items-center gap-3 px-5 py-3.5 bg-amber-50 border-b border-amber-100">
                             <div class="w-7 h-7 rounded-lg bg-amber-100 flex items-center justify-center text-amber-600 flex-shrink-0">
@@ -338,55 +334,69 @@
                                 </svg>
                             </div>
                             <div>
-                                <span class="text-xs font-bold text-amber-800 uppercase tracking-wider">Jadwal Kenaikan Berkala</span>
+                                <span class="text-xs font-bold text-amber-800 uppercase tracking-wider">Jadwal Kenaikan Berkala Awal</span>
                                 <p class="text-xs text-amber-600 mt-0.5">Opsional — sistem akan memberi notifikasi H-30 sebelum tanggal berikutnya</p>
                             </div>
                         </div>
                         <div class="p-5">
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-
-                                {{-- Berkala Terakhir --}}
-                                <div>
-                                    <label class="block text-xs font-semibold text-gray-600 mb-1.5">
-                                        <span class="inline-flex items-center gap-1.5">
-                                            <span class="w-4 h-4 rounded bg-gray-100 flex items-center justify-center">
-                                                <svg class="w-2.5 h-2.5 text-gray-600" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                                </svg>
-                                            </span>
-                                            Tanggal Berkala Terakhir
+                            <div class="max-w-xs">
+                                <label class="block text-xs font-semibold text-gray-600 mb-1.5">
+                                    <span class="inline-flex items-center gap-1.5">
+                                        <span class="w-4 h-4 rounded bg-green-100 flex items-center justify-center">
+                                            <svg class="w-2.5 h-2.5 text-green-600" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                            </svg>
                                         </span>
-                                    </label>
-                                    <input type="date" name="tanggal_berkala_terakhir"
-                                           value="{{ old('tanggal_berkala_terakhir') }}"
-                                           class="w-full px-3.5 py-2.5 text-sm border rounded-xl bg-white text-gray-900 outline-none transition-all focus:ring-2 focus:ring-gray-400 focus:border-transparent @error('tanggal_berkala_terakhir') border-red-400 ring-2 ring-red-100 @else border-gray-300 @enderror">
-                                    @error('tanggal_berkala_terakhir')
-                                        <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
-                                    @enderror
-                                    <p class="text-xs text-gray-400 mt-1">Tanggal kenaikan berkala terakhir yang sudah disetujui (jika ada)</p>
-                                </div>
+                                        Tanggal Berkala Berikutnya
+                                    </span>
+                                </label>
+                                <input type="date" name="tanggal_berkala_berikutnya"
+                                       value="{{ old('tanggal_berkala_berikutnya') }}"
+                                       class="w-full px-3.5 py-2.5 text-sm border rounded-xl bg-white text-gray-900 outline-none transition-all focus:ring-2 focus:ring-green-400 focus:border-transparent @error('tanggal_berkala_berikutnya') border-red-400 ring-2 ring-red-100 @else border-gray-300 @enderror">
+                                @error('tanggal_berkala_berikutnya')
+                                    <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
+                                @enderror
+                                <p class="text-xs text-gray-400 mt-1.5">
+                                    Kosongkan jika belum ada jadwal. Jika diisi, akan membuat jadwal pertama di tabel kenaikan berkala.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
 
-                                {{-- Berkala Berikutnya --}}
-                                <div>
-                                    <label class="block text-xs font-semibold text-gray-600 mb-1.5">
-                                        <span class="inline-flex items-center gap-1.5">
-                                            <span class="w-4 h-4 rounded bg-green-100 flex items-center justify-center">
-                                                <svg class="w-2.5 h-2.5 text-green-600" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                                </svg>
-                                            </span>
-                                            Tanggal Berkala Berikutnya
+                    {{-- 4b. Jadwal Kenaikan Golongan Awal --}}
+                    <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+                        <div class="flex items-center gap-3 px-5 py-3.5 bg-purple-50 border-b border-purple-100">
+                            <div class="w-7 h-7 rounded-lg bg-purple-100 flex items-center justify-center text-purple-600 flex-shrink-0">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <span class="text-xs font-bold text-purple-800 uppercase tracking-wider">Jadwal Kenaikan Golongan Awal</span>
+                                <p class="text-xs text-purple-600 mt-0.5">Opsional — membutuhkan Golongan diisi di bagian Kepegawaian</p>
+                            </div>
+                        </div>
+                        <div class="p-5">
+                            <div class="max-w-xs">
+                                <label class="block text-xs font-semibold text-gray-600 mb-1.5">
+                                    <span class="inline-flex items-center gap-1.5">
+                                        <span class="w-4 h-4 rounded bg-purple-100 flex items-center justify-center">
+                                            <svg class="w-2.5 h-2.5 text-purple-600" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l7.5-7.5 7.5 7.5m-15 6l7.5-7.5 7.5 7.5"/>
+                                            </svg>
                                         </span>
-                                    </label>
-                                    <input type="date" name="tanggal_berkala_berikutnya"
-                                           value="{{ old('tanggal_berkala_berikutnya') }}"
-                                           class="w-full px-3.5 py-2.5 text-sm border rounded-xl bg-white text-gray-900 outline-none transition-all focus:ring-2 focus:ring-green-400 focus:border-transparent @error('tanggal_berkala_berikutnya') border-red-400 ring-2 ring-red-100 @else border-gray-300 @enderror">
-                                    @error('tanggal_berkala_berikutnya')
-                                        <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
-                                    @enderror
-                                    <p class="text-xs text-gray-400 mt-1">Kosongkan jika belum ada jadwal</p>
-                                </div>
-
+                                        Tanggal Golongan Berikutnya
+                                    </span>
+                                </label>
+                                <input type="date" name="tanggal_golongan_berikutnya"
+                                       value="{{ old('tanggal_golongan_berikutnya') }}"
+                                       class="w-full px-3.5 py-2.5 text-sm border rounded-xl bg-white text-gray-900 outline-none transition-all focus:ring-2 focus:ring-purple-400 focus:border-transparent @error('tanggal_golongan_berikutnya') border-red-400 ring-2 ring-red-100 @else border-gray-300 @enderror">
+                                @error('tanggal_golongan_berikutnya')
+                                    <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
+                                @enderror
+                                <p class="text-xs text-gray-400 mt-1.5">
+                                    Kosongkan jika belum ada jadwal. Golongan saat ini akan dicatat sebagai golongan awal (lama).
+                                </p>
                             </div>
                         </div>
                     </div>

@@ -319,17 +319,6 @@
                                     @enderror
                                 </div>
 
-                                <div>
-                                    <label class="block text-xs font-semibold text-gray-600 mb-1.5">
-                                        Tanggal Mulai Golongan <span class="text-red-500">*</span>
-                                    </label>
-                                    <input type="date" name="tanggal_mulai_golongan"
-                                           value="{{ old('tanggal_mulai_golongan', $karyawan->tanggal_mulai_golongan?->format('Y-m-d')) }}"
-                                           class="w-full px-3.5 py-2.5 text-sm border rounded-xl bg-white text-gray-900 outline-none transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('tanggal_mulai_golongan') border-red-400 ring-2 ring-red-100 @else border-gray-300 @enderror">
-                                    @error('tanggal_mulai_golongan')
-                                        <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
-                                    @enderror
-                                </div>
 
                             </div>
                         </div>
@@ -384,14 +373,15 @@
                                             Tanggal Berkala Berikutnya
                                         </span>
                                     </label>
+                                    @php $berkalaAktif = $karyawan->kenaikanBerkalaAktif; @endphp
                                     <input type="date" name="tanggal_berkala_berikutnya"
-                                           value="{{ old('tanggal_berkala_berikutnya', $karyawan->tanggal_berkala_berikutnya?->format('Y-m-d')) }}"
+                                           value="{{ old('tanggal_berkala_berikutnya', $berkalaAktif?->tanggal_berikutnya?->format('Y-m-d')) }}"
                                            class="w-full px-3.5 py-2.5 text-sm border rounded-xl bg-white text-gray-900 outline-none transition-all focus:ring-2 focus:ring-green-400 focus:border-transparent @error('tanggal_berkala_berikutnya') border-red-400 ring-2 ring-red-100 @else border-gray-300 @enderror">
                                     @error('tanggal_berkala_berikutnya')
                                         <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
                                     @enderror
-                                    @if ($karyawan->tanggal_berkala_berikutnya)
-                                        @php $sisaBerkala = now()->startOfDay()->diffInDays($karyawan->tanggal_berkala_berikutnya, false); @endphp
+                                    @if ($berkalaAktif?->tanggal_berikutnya)
+                                        @php $sisaBerkala = now()->startOfDay()->diffInDays($berkalaAktif->tanggal_berikutnya, false); @endphp
                                         <p class="text-xs mt-1 {{ $sisaBerkala <= 30 && $sisaBerkala >= 0 ? 'text-amber-600 font-semibold' : 'text-gray-400' }}">
                                             @if ($sisaBerkala < 0)
                                                 Sudah lewat {{ abs($sisaBerkala) }} hari yang lalu
@@ -399,6 +389,79 @@
                                                 Hari ini!
                                             @else
                                                 Sisa {{ $sisaBerkala }} hari lagi
+                                            @endif
+                                        </p>
+                                    @else
+                                        <p class="text-xs text-gray-400 mt-1">Kosongkan jika belum ada jadwal</p>
+                                    @endif
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- 5. Jadwal Kenaikan Golongan ─────────────────────────────────── --}}
+                    <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+                        <div class="flex items-center gap-3 px-5 py-3.5 bg-purple-50 border-b border-purple-100">
+                            <div class="w-7 h-7 rounded-lg bg-purple-100 flex items-center justify-center text-purple-600 flex-shrink-0">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l7.5-7.5 7.5 7.5m-15 6l7.5-7.5 7.5 7.5"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <span class="text-xs font-bold text-purple-800 uppercase tracking-wider">Jadwal Kenaikan Golongan</span>
+                                <p class="text-xs text-purple-600 mt-0.5">Mengubah tanggal akan memperbarui jadwal kenaikan golongan yang aktif</p>
+                            </div>
+                        </div>
+                        <div class="p-5">
+                            @php $golonganAktif = $karyawan->kenaikanGolonganAktif; @endphp
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+                                {{-- Golongan Saat Ini (read-only info) --}}
+                                <div>
+                                    <label class="block text-xs font-semibold text-gray-600 mb-1.5">
+                                        <span class="inline-flex items-center gap-1.5">
+                                            <span class="w-4 h-4 rounded bg-gray-100 flex items-center justify-center">
+                                                <svg class="w-2.5 h-2.5 text-gray-600" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                                </svg>
+                                            </span>
+                                            Golongan Saat Ini
+                                        </span>
+                                    </label>
+                                    <div class="w-full px-3.5 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 text-gray-700">
+                                        {{ $karyawan->golongan?->nama_golongan ?? '— Belum diatur —' }}
+                                    </div>
+                                    <p class="text-xs text-gray-400 mt-1">Ubah golongan aktif di bagian Kepegawaian di atas</p>
+                                </div>
+
+                                {{-- Golongan Berikutnya (tanggal jadwal) --}}
+                                <div>
+                                    <label class="block text-xs font-semibold text-gray-600 mb-1.5">
+                                        <span class="inline-flex items-center gap-1.5">
+                                            <span class="w-4 h-4 rounded bg-purple-100 flex items-center justify-center">
+                                                <svg class="w-2.5 h-2.5 text-purple-600" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l7.5-7.5 7.5 7.5"/>
+                                                </svg>
+                                            </span>
+                                            Tanggal Golongan Berikutnya
+                                        </span>
+                                    </label>
+                                    <input type="date" name="tanggal_golongan_berikutnya"
+                                           value="{{ old('tanggal_golongan_berikutnya', $golonganAktif?->tanggal_berikutnya?->format('Y-m-d')) }}"
+                                           class="w-full px-3.5 py-2.5 text-sm border rounded-xl bg-white text-gray-900 outline-none transition-all focus:ring-2 focus:ring-purple-400 focus:border-transparent @error('tanggal_golongan_berikutnya') border-red-400 ring-2 ring-red-100 @else border-gray-300 @enderror">
+                                    @error('tanggal_golongan_berikutnya')
+                                        <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
+                                    @enderror
+                                    @if ($golonganAktif?->tanggal_berikutnya)
+                                        @php $sisaGolongan = now()->startOfDay()->diffInDays($golonganAktif->tanggal_berikutnya, false); @endphp
+                                        <p class="text-xs mt-1 {{ $sisaGolongan <= 30 && $sisaGolongan >= 0 ? 'text-purple-600 font-semibold' : 'text-gray-400' }}">
+                                            @if ($sisaGolongan < 0)
+                                                Sudah lewat {{ abs($sisaGolongan) }} hari yang lalu
+                                            @elseif ($sisaGolongan === 0)
+                                                Hari ini!
+                                            @else
+                                                Sisa {{ $sisaGolongan }} hari lagi
                                             @endif
                                         </p>
                                     @else
