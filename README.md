@@ -1,6 +1,5 @@
-# 📋 Analisis Lengkap Project — Sistem Kepegawaian (HRIS)
+# 📋 Sistem Kepegawaian (HRIS) — Perpustakaan Daerah
 
-> **Nama Database**: `perpusda_db`
 > **Framework**: Laravel 13 + Blade + TailwindCSS + Alpine.js + Vite
 > **PHP**: 8.3+ | **Database**: MySQL
 
@@ -23,8 +22,78 @@ Project ini adalah **Sistem Informasi Kepegawaian** (Human Resource Information 
 | **Autentikasi** | Laravel Breeze | Login, register, forgot password |
 | **Export Excel** | `spatie/simple-excel` | Export/import data karyawan via XLSX |
 | **Export PDF** | `barryvdh/laravel-dompdf` | Generate PDF profil karyawan |
-| **Database** | MySQL (via `.env`) | Relational database |
+| **Database** | MySQL | Relational database |
 | **Testing** | Pest 4 | PHP testing framework |
+
+---
+
+## 🚀 Instalasi & Setup
+
+### Prasyarat
+
+- PHP >= 8.3
+- Composer
+- Node.js >= 18 & npm
+- MySQL
+
+### Langkah Instalasi
+
+```bash
+# 1. Clone repository
+git clone <repository-url>
+cd website-new
+
+# 2. Install dependensi PHP
+composer install
+
+# 3. Salin file environment
+cp .env.example .env
+
+# 4. Generate application key
+php artisan key:generate
+
+# 5. Konfigurasi database di .env
+#    Sesuaikan DB_DATABASE, DB_USERNAME, DB_PASSWORD
+
+# 6. Jalankan migration & seeder
+php artisan migrate --seed
+
+# 7. Buat symlink storage
+php artisan storage:link
+
+# 8. Install dependensi Node.js
+npm install
+
+# 9. Build assets
+npm run build
+```
+
+### Menjalankan Development Server
+
+```bash
+# Cara cepat (semua sekaligus: server, queue, logs, vite)
+composer dev
+
+# Atau manual satu per satu:
+php artisan serve          # Laravel server
+npm run dev                # Vite dev server
+php artisan queue:listen   # Queue worker
+```
+
+### Setup Cron Job (Production)
+
+```bash
+crontab -e
+# Tambahkan baris ini:
+* * * * * cd /path-to-project && php artisan schedule:run >> /dev/null 2>&1
+```
+
+### Generate Notifikasi Manual (Opsional)
+
+```bash
+# Generate notifikasi kenaikan untuk H-1 s/d H-30
+php artisan tinker --execute="\App\Models\NotifikasiKenaikan::generateRange(); echo 'Done';"
+```
 
 ---
 
@@ -34,13 +103,13 @@ Project ini adalah **Sistem Informasi Kepegawaian** (Human Resource Information 
 
 | File | Fungsi |
 |---|---|
-| [composer.json](file:///e:/Perpustakaan/website-new/composer.json) | Mendefinisikan dependensi PHP (Laravel, Breeze, DomPDF, dll) dan script automasi |
-| [package.json](file:///e:/Perpustakaan/website-new/package.json) | Mendefinisikan dependensi Node.js (Vite, Tailwind, Alpine.js) |
-| [vite.config.js](file:///e:/Perpustakaan/website-new/vite.config.js) | Konfigurasi Vite — menentukan entry point CSS/JS |
-| [tailwind.config.js](file:///e:/Perpustakaan/website-new/tailwind.config.js) | Konfigurasi TailwindCSS — font Figtree, scan file Blade |
-| [.env](file:///e:/Perpustakaan/website-new/.env) | Konfigurasi environment (database, mail, cache, session) |
-| [phpunit.xml](file:///e:/Perpustakaan/website-new/phpunit.xml) | Konfigurasi test runner |
-| [postcss.config.js](file:///e:/Perpustakaan/website-new/postcss.config.js) | PostCSS pipeline (autoprefixer) |
+| `composer.json` | Mendefinisikan dependensi PHP (Laravel, Breeze, DomPDF, dll) dan script automasi |
+| `package.json` | Mendefinisikan dependensi Node.js (Vite, Tailwind, Alpine.js) |
+| `vite.config.js` | Konfigurasi Vite — menentukan entry point CSS/JS |
+| `tailwind.config.js` | Konfigurasi TailwindCSS — font Figtree, scan file Blade |
+| `.env` | Konfigurasi environment (database, mail, cache, session) |
+| `phpunit.xml` | Konfigurasi test runner |
+| `postcss.config.js` | PostCSS pipeline (autoprefixer) |
 
 ---
 
@@ -56,16 +125,16 @@ Setiap model merepresentasikan 1 tabel di database dan mendefinisikan relasi ant
 
 | Model | Tabel | Fungsi |
 |---|---|---|
-| [Karyawan.php](file:///e:/Perpustakaan/website-new/app/Models/Karyawan.php) | `karyawans` | **Model utama** — menyimpan data karyawan (NIP, NIK, nama, gender, tanggal lahir/masuk, alamat, agama, foto, status aktif). Berelasi ke jabatan, pendidikan, kontrak, golongan, kenaikan berkala, dan kenaikan golongan |
-| [Jabatan.php](file:///e:/Perpustakaan/website-new/app/Models/Jabatan.php) | `jabatans` | Master data jabatan (nama jabatan) |
-| [Pendidikan.php](file:///e:/Perpustakaan/website-new/app/Models/Pendidikan.php) | `pendidikans` | Master data pendidikan (nama pendidikan + jenjang) |
-| [JenisKontrak.php](file:///e:/Perpustakaan/website-new/app/Models/JenisKontrak.php) | `jenis_kontraks` | Master data jenis kontrak (nama kontrak + jam kerja per hari) |
-| [Golongan.php](file:///e:/Perpustakaan/website-new/app/Models/Golongan.php) | `golongans` | Master data golongan (tipe: PNS/PPPK, nama golongan misal I/A, II/B) |
-| [KenaikanBerkala.php](file:///e:/Perpustakaan/website-new/app/Models/KenaikanBerkala.php) | `kenaikan_berkalas` | Jadwal kenaikan gaji berkala tiap 2 tahun. Status: `scheduled → pending → diterima/stop` |
-| [KenaikanGolongan.php](file:///e:/Perpustakaan/website-new/app/Models/KenaikanGolongan.php) | `kenaikan_golongans` | Jadwal kenaikan golongan/pangkat. Saat approve: update golongan karyawan + catat histori |
-| [HistoriGolongan.php](file:///e:/Perpustakaan/website-new/app/Models/HistoriGolongan.php) | `histori_golongans` | Riwayat permanen setiap kali karyawan naik golongan (audit trail) |
-| [NotifikasiKenaikan.php](file:///e:/Perpustakaan/website-new/app/Models/NotifikasiKenaikan.php) | `notifikasi_kenaikans` | Notifikasi H-30 sebelum tanggal kenaikan (gaji/jabatan). Di-generate via scheduler |
-| [User.php](file:///e:/Perpustakaan/website-new/app/Models/User.php) | `users` | User admin yang login ke sistem |
+| `Karyawan.php` | `karyawans` | **Model utama** — menyimpan data karyawan (NIP, NIK, nama, gender, tanggal lahir/masuk, alamat, agama, foto, status aktif). Berelasi ke jabatan, pendidikan, kontrak, golongan, kenaikan berkala, dan kenaikan golongan |
+| `Jabatan.php` | `jabatans` | Master data jabatan (nama jabatan) |
+| `Pendidikan.php` | `pendidikans` | Master data pendidikan (nama pendidikan + jenjang) |
+| `JenisKontrak.php` | `jenis_kontraks` | Master data jenis kontrak (nama kontrak + jam kerja per hari) |
+| `Golongan.php` | `golongans` | Master data golongan (tipe: PNS/PPPK, nama golongan misal I/A, II/B) |
+| `KenaikanBerkala.php` | `kenaikan_berkalas` | Jadwal kenaikan gaji berkala tiap 2 tahun. Status: `scheduled → pending → diterima/stop` |
+| `KenaikanGolongan.php` | `kenaikan_golongans` | Jadwal kenaikan golongan/pangkat. Saat approve: update golongan karyawan + catat histori |
+| `HistoriGolongan.php` | `histori_golongans` | Riwayat permanen setiap kali karyawan naik golongan (audit trail) |
+| `NotifikasiKenaikan.php` | `notifikasi_kenaikans` | Notifikasi H-30 sebelum tanggal kenaikan (gaji/jabatan). Di-generate via scheduler |
+| `User.php` | `users` | User admin yang login ke sistem |
 
 ##### Diagram Relasi (ERD):
 
@@ -94,16 +163,16 @@ erDiagram
 
 | Controller | Fungsi |
 |---|---|
-| [DashboardController.php](file:///e:/Perpustakaan/website-new/app/Http/Controllers/DashboardController.php) | Halaman utama setelah login. Menampilkan statistik: total karyawan, distribusi per jabatan/pendidikan/kontrak/gender, status PNS/PPPK/Outsourcing, karyawan terbaru, kenaikan berkala & golongan yang upcoming |
-| [KaryawanController.php](file:///e:/Perpustakaan/website-new/app/Http/Controllers/KaryawanController.php) | **CRUD lengkap** data karyawan + export Excel, export PDF (massal & single), import Excel, upload/hapus foto, download template |
-| [GolonganController.php](file:///e:/Perpustakaan/website-new/app/Http/Controllers/GolonganController.php) | CRUD master data golongan (PNS/PPPK) |
-| [JabatanController.php](file:///e:/Perpustakaan/website-new/app/Http/Controllers/JabatanController.php) | CRUD master data jabatan |
-| [PendidikanController.php](file:///e:/Perpustakaan/website-new/app/Http/Controllers/PendidikanController.php) | CRUD master data pendidikan + API endpoint cascading dropdown |
-| [JenisKontrakController.php](file:///e:/Perpustakaan/website-new/app/Http/Controllers/JenisKontrakController.php) | CRUD master data jenis kontrak |
-| [KenaikanBerkalaController.php](file:///e:/Perpustakaan/website-new/app/Http/Controllers/KenaikanBerkalaController.php) | Daftar kenaikan berkala pending, approve (buat jadwal +2 tahun), reject/stop |
-| [KenaikanGolonganController.php](file:///e:/Perpustakaan/website-new/app/Http/Controllers/KenaikanGolonganController.php) | Daftar kenaikan golongan pending, approve (update golongan + histori), reject/stop |
-| [KenaikanController.php](file:///e:/Perpustakaan/website-new/app/Http/Controllers/KenaikanController.php) | Landing page / hub halaman kenaikan |
-| [ProfileController.php](file:///e:/Perpustakaan/website-new/app/Http/Controllers/ProfileController.php) | Edit profil user yang login (nama, email, password) |
+| `DashboardController.php` | Halaman utama setelah login. Menampilkan statistik: total karyawan, distribusi per jabatan/pendidikan/kontrak/gender, status PNS/PPPK/Outsourcing, karyawan terbaru, kenaikan berkala & golongan yang upcoming |
+| `KaryawanController.php` | **CRUD lengkap** data karyawan + export Excel, export PDF (massal & single), import Excel, upload/hapus foto, download template |
+| `GolonganController.php` | CRUD master data golongan (PNS/PPPK) |
+| `JabatanController.php` | CRUD master data jabatan |
+| `PendidikanController.php` | CRUD master data pendidikan + API endpoint cascading dropdown |
+| `JenisKontrakController.php` | CRUD master data jenis kontrak |
+| `KenaikanBerkalaController.php` | Daftar kenaikan berkala pending, approve (buat jadwal +2 tahun), reject/stop |
+| `KenaikanGolonganController.php` | Daftar kenaikan golongan pending, approve (update golongan + histori), reject/stop |
+| `KenaikanController.php` | Landing page / hub halaman kenaikan |
+| `ProfileController.php` | Edit profil user yang login (nama, email, password) |
 | `Auth/` (folder) | Controller bawaan Laravel Breeze untuk login, register, forgot password, verifikasi email |
 
 ---
@@ -112,8 +181,8 @@ erDiagram
 
 | File | Fungsi |
 |---|---|
-| [KaryawanExport.php](file:///e:/Perpustakaan/website-new/app/Exports/KaryawanExport.php) | Export data karyawan ke file XLSX dengan filter (status, jabatan, kontrak, golongan). Menggunakan `Spatie\SimpleExcel` |
-| [KaryawanImport.php](file:///e:/Perpustakaan/website-new/app/Imports/KaryawanImport.php) | Import data karyawan dari XLSX. Fitur: normalisasi header kolom (fleksibel), parsing tanggal multi-format (termasuk Excel serial number), lookup relasi otomatis, `updateOrCreate` berdasarkan NIP |
+| `KaryawanExport.php` | Export data karyawan ke file XLSX dengan filter (status, jabatan, kontrak, golongan). Menggunakan `Spatie\SimpleExcel` |
+| `KaryawanImport.php` | Import data karyawan dari XLSX. Fitur: normalisasi header kolom (fleksibel), parsing tanggal multi-format (termasuk Excel serial number), lookup relasi otomatis, `updateOrCreate` berdasarkan NIP |
 
 ---
 
@@ -121,9 +190,9 @@ erDiagram
 
 | File | Fungsi |
 |---|---|
-| [NotifikasiComposer.php](file:///e:/Perpustakaan/website-new/app/View/Composers/NotifikasiComposer.php) | **Otomatis** inject data notifikasi kenaikan (berkala H-30 + golongan pending) ke semua halaman yang menggunakan `layouts.navigation`. Sehingga badge/popup notifikasi selalu tersedia di navbar |
+| `NotifikasiComposer.php` | **Otomatis** inject data notifikasi kenaikan (berkala H-30 + golongan pending) ke semua halaman yang menggunakan `layouts.navigation`. Sehingga badge/popup notifikasi selalu tersedia di navbar |
 
-Didaftarkan di [AppServiceProvider.php](file:///e:/Perpustakaan/website-new/app/Providers/AppServiceProvider.php):
+Didaftarkan di `AppServiceProvider.php`:
 ```php
 View::composer('layouts.navigation', NotifikasiComposer::class);
 ```
@@ -134,15 +203,16 @@ View::composer('layouts.navigation', NotifikasiComposer::class);
 
 | File | Fungsi |
 |---|---|
-| [ProsesPendingKenaikan.php](file:///e:/Perpustakaan/website-new/app/Console/Commands/ProsesPendingKenaikan.php) | Command `kenaikan:proses-pending` — dijalankan harian via cron. Mengubah status kenaikan yang sudah jatuh tempo dari `scheduled` → `pending` agar muncul di halaman approval admin |
+| `ProsesPendingKenaikan.php` | Command `kenaikan:proses-pending` — dijalankan harian via cron. Mengubah status kenaikan yang sudah jatuh tempo dari `scheduled` → `pending` agar muncul di halaman approval admin |
 
 ##### Alur Status Kenaikan:
+
 ```mermaid
 flowchart LR
-    A["scheduled"] -->|"Cron harian<br/>tanggal ≤ hari ini"| B["pending"]
+    A["scheduled"] -->|"Cron harian\ntanggal <= hari ini"| B["pending"]
     B -->|"Admin approve"| C["diterima"]
     B -->|"Admin reject/stop"| D["stop"]
-    C -->|"Sistem otomatis"| E["Buat jadwal baru<br/>(scheduled +2 thn)"]
+    C -->|"Sistem otomatis"| E["Buat jadwal baru\n+2 tahun, scheduled"]
 ```
 
 ---
@@ -151,8 +221,8 @@ flowchart LR
 
 | File | Fungsi |
 |---|---|
-| [AppLayout.php](file:///e:/Perpustakaan/website-new/app/View/Components/AppLayout.php) | Component class untuk layout utama (authenticated) |
-| [GuestLayout.php](file:///e:/Perpustakaan/website-new/app/View/Components/GuestLayout.php) | Component class untuk layout guest (login/register) |
+| `AppLayout.php` | Component class untuk layout utama (authenticated) |
+| `GuestLayout.php` | Component class untuk layout guest (login/register) |
 
 ---
 
@@ -160,10 +230,11 @@ flowchart LR
 
 | File | Fungsi |
 |---|---|
-| [web.php](file:///e:/Perpustakaan/website-new/routes/web.php) | **Route utama**: Dashboard, Profile, CRUD master data (pendidikan, jabatan, kontrak, golongan), CRUD karyawan + export/import, kenaikan berkala/golongan. Semua dilindungi middleware `auth` + `verified` |
-| [auth.php](file:///e:/Perpustakaan/website-new/routes/auth.php) | Route autentikasi dari Laravel Breeze: register, login, forgot/reset password, verifikasi email, logout |
+| `web.php` | **Route utama**: Dashboard, Profile, CRUD master data (pendidikan, jabatan, kontrak, golongan), CRUD karyawan + export/import, kenaikan berkala/golongan. Semua dilindungi middleware `auth` + `verified` |
+| `auth.php` | Route autentikasi dari Laravel Breeze: register, login, forgot/reset password, verifikasi email, logout |
 
 ##### Ringkasan Endpoint:
+
 | URL | Method | Fungsi |
 |---|---|---|
 | `/` | GET | Welcome page |
@@ -190,10 +261,10 @@ flowchart LR
 
 | Folder/File | Fungsi |
 |---|---|
-| `layouts/` | Template induk: [app.blade.php](file:///e:/Perpustakaan/website-new/resources/views/layouts/app.blade.php) (layout utama), [guest.blade.php](file:///e:/Perpustakaan/website-new/resources/views/layouts/guest.blade.php) (halaman login/register), [navigation.blade.php](file:///e:/Perpustakaan/website-new/resources/views/layouts/navigation.blade.php) (navbar + sidebar + popup notifikasi) |
+| `layouts/` | Template induk: `app.blade.php` (layout utama), `guest.blade.php` (halaman login/register), `navigation.blade.php` (navbar + sidebar + popup notifikasi) |
 | `components/` | 15 reusable Blade component: button, dropdown, modal, form-field, searchable-select, dll |
-| [dashboard.blade.php](file:///e:/Perpustakaan/website-new/resources/views/dashboard.blade.php) | Halaman dashboard — chart, statistik, tabel karyawan terbaru |
-| [welcome.blade.php](file:///e:/Perpustakaan/website-new/resources/views/welcome.blade.php) | Landing page / halaman awal |
+| `dashboard.blade.php` | Halaman dashboard — chart, statistik, tabel karyawan terbaru |
+| `welcome.blade.php` | Landing page / halaman awal |
 | `karyawan/` | 6 views: index (list+filter), create, edit, show (detail), pdf.blade.php (PDF massal), pdf-single.blade.php (PDF per karyawan) |
 | `golongan/` | 3 views: index, create, edit |
 | `jabatan/` | Views untuk CRUD jabatan |
@@ -213,26 +284,26 @@ flowchart LR
 
 | Migration | Tabel yang Dibuat |
 |---|---|
-| [create_users_table](file:///e:/Perpustakaan/website-new/database/migrations/0001_01_01_000000_create_users_table.php) | `users`, `password_reset_tokens`, `sessions` |
-| [create_cache_table](file:///e:/Perpustakaan/website-new/database/migrations/0001_01_01_000001_create_cache_table.php) | `cache`, `cache_locks` |
-| [create_jobs_table](file:///e:/Perpustakaan/website-new/database/migrations/0001_01_01_000002_create_jobs_table.php) | `jobs`, `job_batches`, `failed_jobs` |
-| [create_master_tables](file:///e:/Perpustakaan/website-new/database/migrations/2026_05_16_061000_create_master_tables.php) | `pendidikans`, `jabatans`, `jenis_kontraks`, `golongans` |
-| [create_karyawans_table](file:///e:/Perpustakaan/website-new/database/migrations/2026_05_16_070000_create_karyawans_table.php) | `karyawans` (tabel utama karyawan) |
-| [create_kenaikan_tables](file:///e:/Perpustakaan/website-new/database/migrations/2026_06_01_000001_create_kenaikan_tables.php) | `kenaikan_berkalas`, `kenaikan_golongans`, `histori_golongans` |
-| [add_jenjang](file:///e:/Perpustakaan/website-new/database/migrations/2026_06_18_084628_add_jenjang_to_pendidikans_table.php) | Tambah kolom `jenjang` ke `pendidikans` |
-| [restructure_pendidikan](file:///e:/Perpustakaan/website-new/database/migrations/2026_06_18_160000_restructure_pendidikan_remove_nama_add_to_karyawan.php) | Pindahkan `nama_pendidikan` ke tabel karyawan |
-| [change_jenjang](file:///e:/Perpustakaan/website-new/database/migrations/2026_06_25_065734_change_jenjang_from_enum_to_string_in_pendidikans_table.php) | Ubah tipe `jenjang` dari enum ke string |
+| `0001_01_01_000000_create_users_table` | `users`, `password_reset_tokens`, `sessions` |
+| `0001_01_01_000001_create_cache_table` | `cache`, `cache_locks` |
+| `0001_01_01_000002_create_jobs_table` | `jobs`, `job_batches`, `failed_jobs` |
+| `2026_05_16_061000_create_master_tables` | `pendidikans`, `jabatans`, `jenis_kontraks`, `golongans` |
+| `2026_05_16_070000_create_karyawans_table` | `karyawans` (tabel utama karyawan) |
+| `2026_06_01_000001_create_kenaikan_tables` | `kenaikan_berkalas`, `kenaikan_golongans`, `histori_golongans` |
+| `2026_06_18_084628_add_jenjang` | Tambah kolom `jenjang` ke `pendidikans` |
+| `2026_06_18_160000_restructure_pendidikan` | Pindahkan `nama_pendidikan` ke tabel karyawan |
+| `2026_06_25_065734_change_jenjang` | Ubah tipe `jenjang` dari enum ke string |
 
 #### Seeders (Data Awal)
 
 | Seeder | Fungsi |
 |---|---|
-| [DatabaseSeeder.php](file:///e:/Perpustakaan/website-new/database/seeders/DatabaseSeeder.php) | Memanggil semua seeder lainnya |
-| [GolonganSeeder.php](file:///e:/Perpustakaan/website-new/database/seeders/GolonganSeeder.php) | Isi data golongan PNS & PPPK |
-| [JabatanSeeder.php](file:///e:/Perpustakaan/website-new/database/seeders/JabatanSeeder.php) | Isi data jabatan contoh |
-| [JenisKontrakSeeder.php](file:///e:/Perpustakaan/website-new/database/seeders/JenisKontrakSeeder.php) | Isi data jenis kontrak contoh |
-| [KaryawanSeeder.php](file:///e:/Perpustakaan/website-new/database/seeders/KaryawanSeeder.php) | Isi data karyawan dummy |
-| [PendidikanSeeder.php](file:///e:/Perpustakaan/website-new/database/seeders/PendidikanSeeder.php) | Isi data pendidikan contoh |
+| `DatabaseSeeder.php` | Memanggil semua seeder lainnya |
+| `GolonganSeeder.php` | Isi data golongan PNS & PPPK |
+| `JabatanSeeder.php` | Isi data jabatan contoh |
+| `JenisKontrakSeeder.php` | Isi data jenis kontrak contoh |
+| `KaryawanSeeder.php` | Isi data karyawan dummy |
+| `PendidikanSeeder.php` | Isi data pendidikan contoh |
 
 ---
 
@@ -249,7 +320,7 @@ flowchart LR
 
 | File | Fungsi |
 |---|---|
-| [dompdf.php](file:///e:/Perpustakaan/website-new/config/dompdf.php) | Konfigurasi library DomPDF (ukuran kertas, font, dll) |
+| `dompdf.php` | Konfigurasi library DomPDF (ukuran kertas, font, dll) |
 | `app.php`, `auth.php`, `cache.php`, `database.php`, `filesystems.php`, `logging.php`, `mail.php`, `queue.php`, `services.php`, `session.php` | Konfigurasi standar Laravel |
 
 ---
@@ -280,6 +351,7 @@ flowchart LR
 ## 🔄 Alur Kerja Utama Aplikasi
 
 ### 1. Manajemen Karyawan
+
 ```mermaid
 flowchart TD
     A["Admin Login"] --> B["Dashboard"]
@@ -291,24 +363,26 @@ flowchart TD
 ```
 
 ### 2. Sistem Kenaikan Otomatis
+
 ```mermaid
 flowchart TD
-    A["Karyawan Baru Ditambahkan"] --> B["Jadwal Kenaikan Dibuat<br/>(status: scheduled)"]
-    B --> C["Cron Harian<br/>kenaikan:proses-pending"]
+    A["Karyawan Baru Ditambahkan"] --> B["Jadwal Kenaikan Dibuat\n(status: scheduled)"]
+    B --> C["Cron Harian\nkenaikan:proses-pending"]
     C --> D{"Sudah Jatuh Tempo?"}
-    D -->|Ya| E["Status → pending<br/>Muncul di Dashboard + Notifikasi"]
+    D -->|Ya| E["Status menjadi pending\nMuncul di Dashboard + Notifikasi"]
     D -->|Belum| C
     E --> F{"Admin Action"}
-    F -->|Approve| G["Status → diterima<br/>Buat jadwal baru +2 tahun"]
-    F -->|Stop| H["Status → stop<br/>Tidak ada jadwal baru"]
+    F -->|Approve| G["Status menjadi diterima\nBuat jadwal baru +2 tahun"]
+    F -->|Stop| H["Status menjadi stop\nTidak ada jadwal baru"]
 ```
 
 ### 3. Notifikasi
+
 ```mermaid
 flowchart LR
     A["NotifikasiComposer"] --> B["Query kenaikan berkala H-30"]
     A --> C["Query kenaikan golongan pending"]
-    B --> D["Inject ke navigation<br/>Badge & popup"]
+    B --> D["Inject ke navigation\nBadge & popup"]
     C --> D
 ```
 
@@ -330,3 +404,9 @@ flowchart LR
 | ✅ Kenaikan Golongan | Dengan histori & audit trail |
 | ✅ Notifikasi Kenaikan | H-30, badge di navbar |
 | ✅ Cron Job | `kenaikan:proses-pending` |
+
+---
+
+## 📄 Lisensi
+
+MIT License
