@@ -84,7 +84,7 @@ class KaryawanController extends Controller
     public function create()
     {
         $jabatans    = Jabatan::orderBy('nama_jabatan')->get();
-        $pendidikans = Pendidikan::orderBy('nama_pendidikan')->get();
+        $pendidikans = Pendidikan::orderBy('jenjang')->get();
         $kontraks    = JenisKontrak::orderBy('nama_kontrak')->get();
         $golongans   = Golongan::orderBy('tipe')->orderBy('nama_golongan')->get();
 
@@ -155,7 +155,7 @@ class KaryawanController extends Controller
     public function edit(Karyawan $karyawan)
     {
         $jabatans    = Jabatan::orderBy('nama_jabatan')->get();
-        $pendidikans = Pendidikan::orderBy('nama_pendidikan')->get();
+        $pendidikans = Pendidikan::orderBy('jenjang')->get();
         $kontraks    = JenisKontrak::orderBy('nama_kontrak')->get();
         $golongans   = Golongan::orderBy('tipe')->orderBy('nama_golongan')->get();
 
@@ -261,6 +261,68 @@ class KaryawanController extends Controller
         return back()->with('success', 'Foto berhasil dihapus.');
     }
 
+    // ── EXPORT EXCEL ─────────────────────────────────────────────────────────
+
+    public function exportExcel(Request $request)
+    {
+        $filters = $request->only(['status', 'jabatan', 'kontrak', 'golongan']);
+        $exporter = new \App\Exports\KaryawanExport($filters);
+        return $exporter->download('data-karyawan-' . now()->format('Y-m-d') . '.xlsx');
+    }
+
+    // ── EXPORT PDF (List) ────────────────────────────────────────────────────
+
+    public function exportPdf(Request $request)
+    {
+        $query = Karyawan::with(['jabatan', 'pendidikan', 'jenisKontrak', 'golongan'])
+            ->orderBy('nama_lengkap');
+
+        $filterInfo = [];
+
+        if ($request->filled('status')) {
+            $query->where('status_aktif', $request->status);
+            $filterInfo[] = 'Status: ' . $request->status;
+        }
+        if ($request->filled('jabatan')) {
+            $query->where('id_jabatan', $request->jabatan);
+            $jabatan = Jabatan::find($request->jabatan);
+            $filterInfo[] = 'Jabatan: ' . ($jabatan?->nama_jabatan ?? $request->jabatan);
+        }
+        if ($request->filled('kontrak')) {
+            $query->where('id_jenis_kontrak', $request->kontrak);
+            $kontrak = JenisKontrak::find($request->kontrak);
+            $filterInfo[] = 'Kontrak: ' . ($kontrak?->nama_kontrak ?? $request->kontrak);
+        }
+        if ($request->filled('golongan')) {
+            $query->where('id_golongan', $request->golongan);
+            $golongan = Golongan::find($request->golongan);
+            $filterInfo[] = 'Golongan: ' . ($golongan?->nama_golongan ?? $request->golongan);
+        }
+
+        $karyawans = $query->get();
+
+        $pdf = Pdf::loadView('karyawan.pdf', compact('karyawans', 'filterInfo'))
+            ->setPaper('a4', 'landscape');
+
+        return $pdf->download('data-karyawan-' . now()->format('Y-m-d') . '.pdf');
+    }
+
+    // ── EXPORT PDF (Single Karyawan) ─────────────────────────────────────────
+
+    public function exportPdfSingle(Karyawan $karyawan)
+    {
+        $karyawan->load([
+            'jabatan', 'pendidikan', 'jenisKontrak', 'golongan',
+            'kenaikanBerkalas' => fn ($q) => $q->orderByDesc('tanggal_berikutnya')->limit(5),
+            'historiGolongans' => fn ($q) => $q->orderByDesc('tanggal_efektif')->limit(5),
+        ]);
+
+        $pdf = Pdf::loadView('karyawan.pdf-single', compact('karyawan'))
+            ->setPaper('a4', 'portrait');
+
+        return $pdf->download('profil-karyawan-' . \Illuminate\Support\Str::slug($karyawan->nama_lengkap) . '.pdf');
+    }
+
     // ── RULES ─────────────────────────────────────────────────────────────────
 
     private function rules(?int $ignoreId = null): array
@@ -279,6 +341,7 @@ class KaryawanController extends Controller
             'golongan_darah'         => 'nullable|string|max:2',
             'id_jabatan'             => 'nullable|exists:jabatans,id_jabatan',
             'id_pendidikan'          => 'nullable|exists:pendidikans,id_pendidikan',
+            'nama_pendidikan'        => 'nullable|string|max:100',
             'id_jenis_kontrak'       => 'nullable|exists:jenis_kontraks,id_jenis_kontrak',
             'id_golongan'            => 'nullable|exists:golongans,id_golongan|required_with:tanggal_golongan_berikutnya',
             'status_aktif'           => 'required|in:Aktif,Pensiun',

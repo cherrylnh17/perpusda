@@ -196,8 +196,8 @@
                 <th style="width:85px">Jabatan</th>
                 <th style="width:65px">Kontrak</th>
                 <th style="width:55px">Pendidikan</th>
+                <th style="width:60px">Golongan</th>
                 <th style="width:60px">Tgl Masuk</th>
-                <th class="right" style="width:80px">Gaji</th>
                 <th class="center" style="width:52px">Status</th>
             </tr>
         </thead>
@@ -229,13 +229,11 @@
 
                 <td style="font-size:8.5px">{{ $k->jenisKontrak?->nama_kontrak ?? '—' }}</td>
 
-                <td>{{ $k->pendidikan?->nama_pendidikan ?? '—' }}</td>
+                <td>{{ $k->pendidikan?->jenjang ?? ($k->nama_pendidikan ?? '—') }}</td>
+
+                <td>{{ $k->golongan?->nama_golongan ?? '—' }}</td>
 
                 <td>{{ $k->tanggal_masuk?->format('d/m/Y') ?? '—' }}</td>
-
-                <td class="right" style="font-size:9px">
-                    {{ number_format($k->gaji, 0, ',', '.') }}
-                </td>
 
                 <td class="center">
                     @php $cls = strtolower($k->status_aktif); @endphp

@@ -33,10 +33,11 @@ class DashboardController extends Controller
             ->limit(6)
             ->get();
 
-        // ── Distribusi karyawan per pendidikan ──────────────────────────────
-        $karyawanPerPendidikan = Karyawan::select('pendidikans.nama_pendidikan', DB::raw('COUNT(*) as total'))
-            ->join('pendidikans', 'karyawans.id_pendidikan', '=', 'pendidikans.id_pendidikan')
-            ->groupBy('pendidikans.nama_pendidikan')
+        // ── Distribusi karyawan per pendidikan (sekarang dari kolom karyawans.nama_pendidikan) ──
+        $karyawanPerPendidikan = Karyawan::select('nama_pendidikan', DB::raw('COUNT(*) as total'))
+            ->whereNotNull('nama_pendidikan')
+            ->where('nama_pendidikan', '!=', '')
+            ->groupBy('nama_pendidikan')
             ->orderByDesc('total')
             ->get();
 
@@ -57,21 +58,17 @@ class DashboardController extends Controller
         $totalLaki      = Karyawan::where('jenis_kelamin', 'Laki-laki')->count();
         $totalPerempuan = Karyawan::where('jenis_kelamin', 'Perempuan')->count();
 
-        // ── PNS / PPPK per gender (via golongan) ─────────────────────────────
-        $pnsLaki = Karyawan::where('jenis_kelamin', 'Laki-laki')
-            ->whereHas('golongan', fn($q) => $q->where('tipe', 'PNS'))
+        // ── PNS / PPPK / Outsourcing (via golongan) ──────────────────────────
+        $totalPNS = Karyawan::whereHas('golongan', fn($q) => $q->where('tipe', 'PNS'))
             ->count();
 
-        $pnsPerempuan = Karyawan::where('jenis_kelamin', 'Perempuan')
-            ->whereHas('golongan', fn($q) => $q->where('tipe', 'PNS'))
+        $totalPPPK = Karyawan::whereHas('golongan', fn($q) => $q->where('tipe', 'PPPK'))
             ->count();
 
-        $pppkLaki = Karyawan::where('jenis_kelamin', 'Laki-laki')
-            ->whereHas('golongan', fn($q) => $q->where('tipe', 'PPPK'))
-            ->count();
-
-        $pppkPerempuan = Karyawan::where('jenis_kelamin', 'Perempuan')
-            ->whereHas('golongan', fn($q) => $q->where('tipe', 'PPPK'))
+        $totalOutsourcing = Karyawan::where(function ($q) {
+                $q->whereNull('id_golongan')
+                  ->orWhereHas('golongan', fn($g) => $g->where('tipe', '!=', 'PNS')->where('tipe', '!=', 'PPPK'));
+            })
             ->count();
 
         // ── Distribusi jenis kontrak per gender ──────────────────────────────
@@ -89,10 +86,20 @@ class DashboardController extends Controller
             ->orderByDesc('total')
             ->get();
 
-        // ── 5 Karyawan aktif dengan kenaikan berkala H-30 terdekat ──────────
-        // Berdasarkan jadwal aktif (scheduled/pending) di tabel kenaikan_berkalas
+        // ── Tanggal referensi ───────────────────────────────────────────────
         $today = Carbon::today();
         $batas = $today->copy()->addDays(30);
+
+        // ── Jumlah kenaikan berkala H-30 (untuk kartu dashboard) ─────────────
+        $totalKenaikanBerkala = KenaikanBerkala::whereIn('status', ['scheduled', 'pending'])
+            ->whereBetween('tanggal_berikutnya', [$today, $batas])
+            ->count();
+
+        // ── Jumlah kenaikan golongan pending (untuk kartu dashboard) ─────────
+        $totalKenaikanGolongan = KenaikanGolongan::where('status', 'pending')->count();
+
+        // ── 5 Karyawan aktif dengan kenaikan berkala H-30 terdekat ──────────
+        // Berdasarkan jadwal aktif (scheduled/pending) di tabel kenaikan_berkalas
 
         $karyawanNaikBerkala = Karyawan::with([
                 'jabatan',
@@ -145,14 +152,15 @@ class DashboardController extends Controller
             'karyawanTerbaru',
             'totalLaki',
             'totalPerempuan',
-            'pnsLaki',
-            'pnsPerempuan',
-            'pppkLaki',
-            'pppkPerempuan',
+            'totalPNS',
+            'totalPPPK',
+            'totalOutsourcing',
             'kontrakLaki',
             'kontrakPerempuan',
             'karyawanNaikBerkala',
             'karyawanNaikGolongan',
+            'totalKenaikanBerkala',
+            'totalKenaikanGolongan',
         ));
     }
 }

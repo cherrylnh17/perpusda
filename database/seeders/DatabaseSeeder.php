@@ -14,9 +14,9 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         User::create([
-            'name'     => 'Tester',
-            'email'    => 'test@gmail.com',
-            'password' => Hash::make('admin123'),
+            'name'     => 'Administrator',
+            'email'    => 'admin@kuduskab.go.id',
+            'password' => Hash::make('Perpusda12'),
         ]);
 
         $this->call([
@@ -24,6 +24,7 @@ class DatabaseSeeder extends Seeder
             PendidikanSeeder::class,
             JenisKontrakSeeder::class,
             GolonganSeeder::class,
+            KaryawanSeeder::class,
         ]);
     }
 }

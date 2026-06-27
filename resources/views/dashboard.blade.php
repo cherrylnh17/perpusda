@@ -14,100 +14,69 @@
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-5">
 
             {{-- ══════════════════════════════════════════════════════
-                 BARIS 1 — Total Karyawan + PNS/PPPK per Gender
+                 BARIS 1 — Ringkasan Total Data (Grid 4)
             ══════════════════════════════════════════════════════ --}}
-            <div class="grid grid-cols-2 lg:grid-cols-5 gap-4">
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
 
-                {{-- Total --}}
-                <div class="col-span-2 lg:col-span-1 bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl p-5 text-white shadow-sm">
-                    <p class="text-xs font-semibold uppercase tracking-widest text-blue-200 mb-1">Total Karyawan</p>
+                {{-- Total Karyawan --}}
+                <div class="bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl p-5 text-white shadow-sm">
+                    <div class="flex items-center gap-3 mb-3">
+                        <span class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
+                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                            </svg>
+                        </span>
+                        <p class="text-xs font-semibold uppercase tracking-widest text-blue-200">Total Karyawan</p>
+                    </div>
                     <p class="text-4xl font-extrabold">{{ number_format($totalKaryawan) }}</p>
-                    <p class="text-xs text-blue-200 mt-2">
-                        <span class="text-white font-semibold">{{ $totalLaki }}L</span> /
-                        <span class="text-white font-semibold">{{ $totalPerempuan }}P</span>
-                    </p>
+                    <div class="flex items-center gap-2 mt-2">
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/30 text-emerald-100">{{ $karyawanAktif }} Aktif</span>
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-white/20 text-blue-100">{{ $karyawanPensiun }} Pensiun</span>
+                    </div>
                 </div>
 
-                {{-- PNS Laki-laki --}}
-                <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
-                    <div class="mb-3">
-                        <span class="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
-                            <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <circle cx="12" cy="7" r="4"/><path stroke-linecap="round" stroke-linejoin="round" d="M5.5 21a8.38 8.38 0 0113 0"/>
+                {{-- Kenaikan Berkala --}}
+                <a href="{{ route('kenaikan-berkala.index') }}" class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+                    <div class="flex items-center gap-3 mb-3">
+                        <span class="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center">
+                            <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                             </svg>
                         </span>
+                        <p class="text-xs font-semibold uppercase tracking-widest text-gray-400">Kenaikan Berkala</p>
                     </div>
-                    <p class="text-2xl font-extrabold text-blue-600">{{ number_format($pnsLaki) }}</p>
-                    <p class="text-xs text-gray-400 mt-0.5">PNS Laki-laki</p>
-                </div>
+                    <p class="text-4xl font-extrabold text-green-600">{{ number_format($totalKenaikanBerkala) }}</p>
+                    <p class="text-xs text-gray-400 mt-2">Jadwal H-30 hari ke depan</p>
+                </a>
 
-                {{-- PNS Perempuan --}}
-                <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
-                    <div class="mb-3">
-                        <span class="w-8 h-8 rounded-lg bg-pink-100 flex items-center justify-center">
-                            <svg class="w-4 h-4 text-pink-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <circle cx="12" cy="7" r="4"/><path stroke-linecap="round" stroke-linejoin="round" d="M5.5 21a8.38 8.38 0 0113 0"/>
+                {{-- Kenaikan Golongan --}}
+                <a href="{{ route('kenaikan-golongan.index') }}" class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+                    <div class="flex items-center gap-3 mb-3">
+                        <span class="w-10 h-10 rounded-xl bg-violet-100 flex items-center justify-center">
+                            <svg class="w-5 h-5 text-violet-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M7 11l5-5m0 0l5 5m-5-5v12"/>
                             </svg>
                         </span>
+                        <p class="text-xs font-semibold uppercase tracking-widest text-gray-400">Kenaikan Golongan</p>
                     </div>
-                    <p class="text-2xl font-extrabold text-pink-500">{{ number_format($pnsPerempuan) }}</p>
-                    <p class="text-xs text-gray-400 mt-0.5">PNS Perempuan</p>
-                </div>
+                    <p class="text-4xl font-extrabold text-violet-600">{{ number_format($totalKenaikanGolongan) }}</p>
+                    <p class="text-xs text-gray-400 mt-2">Pengajuan menunggu persetujuan</p>
+                </a>
 
-                {{-- PPPK Laki-laki --}}
+                {{-- Total Jabatan --}}
                 <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
-                    <div class="mb-3">
-                        <span class="w-8 h-8 rounded-lg bg-violet-100 flex items-center justify-center">
-                            <svg class="w-4 h-4 text-violet-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <circle cx="12" cy="7" r="4"/><path stroke-linecap="round" stroke-linejoin="round" d="M5.5 21a8.38 8.38 0 0113 0"/>
+                    <div class="flex items-center gap-3 mb-3">
+                        <span class="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center">
+                            <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
                             </svg>
                         </span>
+                        <p class="text-xs font-semibold uppercase tracking-widest text-gray-400">Jabatan</p>
                     </div>
-                    <p class="text-2xl font-extrabold text-violet-600">{{ number_format($pppkLaki) }}</p>
-                    <p class="text-xs text-gray-400 mt-0.5">PPPK Laki-laki</p>
+                    <p class="text-4xl font-extrabold text-amber-600">{{ number_format($totalJabatan) }}</p>
+                    <p class="text-xs text-gray-400 mt-2">{{ $totalPNS }} PNS · {{ $totalPPPK }} PPPK · {{ $totalOutsourcing }} Outsourcing</p>
                 </div>
 
-                {{-- PPPK Perempuan --}}
-                <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
-                    <div class="mb-3">
-                        <span class="w-8 h-8 rounded-lg bg-fuchsia-100 flex items-center justify-center">
-                            <svg class="w-4 h-4 text-fuchsia-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <circle cx="12" cy="7" r="4"/><path stroke-linecap="round" stroke-linejoin="round" d="M5.5 21a8.38 8.38 0 0113 0"/>
-                            </svg>
-                        </span>
-                    </div>
-                    <p class="text-2xl font-extrabold text-fuchsia-500">{{ number_format($pppkPerempuan) }}</p>
-                    <p class="text-xs text-gray-400 mt-0.5">PPPK Perempuan</p>
-                </div>
-
-            </div>
-
-            {{-- ══════════════════════════════════════════════════════
-                 BARIS 1b — Statistik Status (hanya Aktif & Pensiun)
-            ══════════════════════════════════════════════════════ --}}
-            <div class="grid grid-cols-2 gap-4">
-                <div class="bg-emerald-50 border border-emerald-100 rounded-2xl p-5 flex items-center gap-4 shadow-sm">
-                    <div class="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center flex-shrink-0">
-                        <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                    </div>
-                    <div>
-                        <p class="text-2xl font-extrabold text-emerald-700">{{ number_format($karyawanAktif) }}</p>
-                        <p class="text-xs text-emerald-600 font-medium">Karyawan Aktif</p>
-                    </div>
-                </div>
-                <div class="bg-slate-50 border border-slate-100 rounded-2xl p-5 flex items-center gap-4 shadow-sm">
-                    <div class="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center flex-shrink-0">
-                        <svg class="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                    </div>
-                    <div>
-                        <p class="text-2xl font-extrabold text-slate-600">{{ number_format($karyawanPensiun) }}</p>
-                        <p class="text-xs text-slate-500 font-medium">Karyawan Pensiun</p>
-                    </div>
-                </div>
             </div>
 
             {{-- ══════════════════════════════════════════════════════
@@ -133,7 +102,7 @@
                 </div>
             </div>
 
-            <a href=""
+            <a href="{{ route('kenaikan-berkala.index') }}"
                class="inline-flex items-center gap-1 text-xs font-semibold text-green-600 hover:text-green-800 transition-colors">
                 Lihat Semua
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
@@ -200,7 +169,7 @@
         {{-- Footer link --}}
         @if ($karyawanNaikBerkala->isNotEmpty())
         <div class="px-6 py-3 border-t border-gray-50 bg-gray-50/50">
-            <a href=""
+            <a href="{{ route('kenaikan-berkala.index') }}"
                class="flex items-center justify-center gap-1.5 text-xs font-medium text-green-600 hover:text-green-800 transition-colors">
                 Lihat semua jadwal kenaikan berkala
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
@@ -231,7 +200,7 @@
                 </div>
             </div>
 
-            <a href=""
+            <a href="{{ route('kenaikan-golongan.index') }}"
                class="inline-flex items-center gap-1 text-xs font-semibold text-violet-600 hover:text-violet-800 transition-colors">
                 Lihat Semua
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
@@ -317,7 +286,7 @@
         {{-- Footer link --}}
         @if ($karyawanNaikGolongan->isNotEmpty())
         <div class="px-6 py-3 border-t border-gray-50 bg-gray-50/50">
-            <a href=""
+            <a href="{{ route('kenaikan-golongan.index') }}"
                class="flex items-center justify-center gap-1.5 text-xs font-medium text-violet-600 hover:text-violet-800 transition-colors">
                 Lihat semua pengajuan kenaikan golongan
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">

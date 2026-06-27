@@ -5,7 +5,8 @@ use App\Http\Controllers\GolonganController;
 use App\Http\Controllers\JabatanController;
 use App\Http\Controllers\JenisKontrakController;
 use App\Http\Controllers\KaryawanController;
-use App\Http\Controllers\KenaikanController;
+use App\Http\Controllers\KenaikanBerkalaController;
+use App\Http\Controllers\KenaikanGolonganController;
 use App\Http\Controllers\PendidikanController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
@@ -40,6 +41,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         'golongan'   => GolonganController::class,
     ]);
 
+    // API: Ambil pendidikan berdasarkan jenjang (untuk cascading dropdown)
+    Route::get('/api/pendidikan', [PendidikanController::class, 'getByJenjang'])
+        ->name('api.pendidikan.by-jenjang');
+
     // Karyawan
     Route::prefix('karyawan')
         ->name('karyawan.')
@@ -60,23 +65,32 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
             Route::delete('{karyawan}/foto', 'deleteFoto')
                 ->name('foto.destroy');
+
+            Route::get('{karyawan}/export-pdf', 'exportPdfSingle')
+                ->name('export.pdf.single');
         });
 
     Route::resource('karyawan', KaryawanController::class);
 
+    // ── Kenaikan (Landing Page) ─────────────────────────────────────────────
     Route::prefix('kenaikan')->name('kenaikan.')->group(function () {
+        Route::get('/', function () {
+            return view('kenaikan.index');
+        })->name('index');
+    });
 
-        // Halaman daftar countdown + filter
-        Route::get('/',  [KenaikanController::class, 'index'])->name('index');
+    // ── Kenaikan Berkala ────────────────────────────────────────────────────
+    Route::prefix('kenaikan-berkala')->name('kenaikan-berkala.')->group(function () {
+        Route::get('/', [KenaikanBerkalaController::class, 'index'])->name('index');
+        Route::post('/{karyawan}/approve', [KenaikanBerkalaController::class, 'approve'])->name('approve');
+        Route::post('/{karyawan}/reject',  [KenaikanBerkalaController::class, 'reject'])->name('reject');
+    });
 
-        // Approve / Reject kenaikan GAJI per karyawan
-        Route::post('/{karyawan}/approve-gaji',  [KenaikanController::class, 'approveGaji'])->name('approve-gaji');
-        Route::post('/{karyawan}/reject-gaji',   [KenaikanController::class, 'rejectGaji'])->name('reject-gaji');
-
-        // Approve / Reject kenaikan JABATAN per karyawan
-        Route::post('/{karyawan}/approve-jabatan', [KenaikanController::class, 'approveJabatan'])->name('approve-jabatan');
-        Route::post('/{karyawan}/reject-jabatan',  [KenaikanController::class, 'rejectJabatan'])->name('reject-jabatan');
-
+    // ── Kenaikan Golongan ───────────────────────────────────────────────────
+    Route::prefix('kenaikan-golongan')->name('kenaikan-golongan.')->group(function () {
+        Route::get('/', [KenaikanGolonganController::class, 'index'])->name('index');
+        Route::post('/{karyawan}/approve', [KenaikanGolonganController::class, 'approve'])->name('approve');
+        Route::post('/{karyawan}/reject',  [KenaikanGolonganController::class, 'reject'])->name('reject');
     });
 });
 

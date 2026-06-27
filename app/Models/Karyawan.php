@@ -24,6 +24,7 @@ class Karyawan extends Model
         'foto',
         'id_jabatan',
         'id_pendidikan',
+        'nama_pendidikan',
         'id_jenis_kontrak',
         'id_golongan',
         'status_aktif',

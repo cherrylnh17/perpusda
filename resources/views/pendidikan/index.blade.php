@@ -1,13 +1,13 @@
 <x-app-layout>
     <x-slot name="header">
         <div class="flex items-center justify-between">
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">Data Pendidikan</h2>
+            <h2 class="font-semibold text-xl text-gray-800 leading-tight">Data Pendidikan (Jenjang)</h2>
             <a href="{{ route('pendidikan.create') }}"
                class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-xl transition-colors shadow-sm">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
                 </svg>
-                Tambah Pendidikan
+                Tambah Jenjang
             </a>
         </div>
     </x-slot>
@@ -33,22 +33,24 @@
                 </div>
             @endif
 
-            {{-- Search --}}
+            {{-- Filter --}}
             <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
-                <form method="GET" action="{{ route('pendidikan.index') }}" class="flex gap-3">
-                    <div class="flex-1 relative">
-                        <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 115 11a6 6 0 0112 0z"/>
-                        </svg>
-                        <input type="text" name="search" value="{{ request('search') }}"
-                               placeholder="Cari nama pendidikan..."
-                               class="w-full pl-10 pr-4 py-2.5 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none">
+                <form method="GET" action="{{ route('pendidikan.index') }}" class="flex gap-3 items-end">
+                    <div class="w-48">
+                        <label class="block text-xs font-semibold text-gray-500 mb-1">Jenjang</label>
+                        <select name="jenjang"
+                                class="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none bg-white">
+                            <option value="">Semua Jenjang</option>
+                            @foreach($jenjangList as $j)
+                                <option value="{{ $j }}" {{ request('jenjang') == $j ? 'selected' : '' }}>{{ $j }}</option>
+                            @endforeach
+                        </select>
                     </div>
                     <button type="submit"
                             class="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-xl transition-colors">
-                        Cari
+                        Filter
                     </button>
-                    @if(request('search'))
+                    @if(request('jenjang'))
                         <a href="{{ route('pendidikan.index') }}"
                            class="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-600 text-sm font-medium rounded-xl transition-colors">
                             Reset
@@ -63,7 +65,7 @@
                     <thead>
                         <tr class="border-b border-gray-100 bg-gray-50">
                             <th class="text-left px-6 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wide w-12">#</th>
-                            <th class="text-left px-6 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wide">Nama Pendidikan</th>
+                            <th class="text-left px-6 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wide">Jenjang</th>
                             <th class="text-center px-6 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wide">Jumlah Karyawan</th>
                             <th class="text-right px-6 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wide">Aksi</th>
                         </tr>
@@ -74,8 +76,10 @@
                                 <td class="px-6 py-4 text-gray-400">
                                     {{ ($pendidikans->currentPage() - 1) * $pendidikans->perPage() + $loop->iteration }}
                                 </td>
-                                <td class="px-6 py-4 font-medium text-gray-800">
-                                    {{ $p->nama_pendidikan }}
+                                <td class="px-6 py-4">
+                                    <span class="inline-flex items-center px-2.5 py-1 text-xs font-semibold rounded-full bg-indigo-100 text-indigo-700">
+                                        {{ $p->jenjang }}
+                                    </span>
                                 </td>
                                 <td class="px-6 py-4 text-center">
                                     <span class="inline-flex items-center justify-center px-2.5 py-1 text-xs font-semibold rounded-full
@@ -94,7 +98,7 @@
                                         </a>
 
                                         <form action="{{ route('pendidikan.destroy', $p) }}" method="POST"
-                                              onsubmit="return confirm('Hapus pendidikan \'{{ $p->nama_pendidikan }}\'?')">
+                                              onsubmit="return confirm('Hapus jenjang \'{{ $p->jenjang }}\'?')">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit"
@@ -116,7 +120,7 @@
                                     <svg class="w-10 h-10 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
                                     </svg>
-                                    <p class="text-sm">Belum ada data pendidikan</p>
+                                    <p class="text-sm">Belum ada data jenjang pendidikan</p>
                                 </td>
                             </tr>
                         @endforelse

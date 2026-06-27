@@ -11,13 +11,14 @@ class PendidikanController extends Controller
     {
         $query = Pendidikan::withCount('karyawans');
 
-        if ($request->filled('search')) {
-            $query->where('nama_pendidikan', 'like', '%' . $request->search . '%');
+        if ($request->filled('jenjang')) {
+            $query->where('jenjang', $request->jenjang);
         }
 
-        $pendidikans = $query->orderBy('nama_pendidikan')->paginate(10)->withQueryString();
+        $pendidikans = $query->orderBy('jenjang')->paginate(10)->withQueryString();
+        $jenjangList = Pendidikan::select('jenjang')->distinct()->orderBy('jenjang')->pluck('jenjang');
 
-        return view('pendidikan.index', compact('pendidikans'));
+        return view('pendidikan.index', compact('pendidikans', 'jenjangList'));
     }
 
     public function create()
@@ -28,14 +29,15 @@ class PendidikanController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'nama_pendidikan' => 'required|string|max:100|unique:pendidikans,nama_pendidikan',
+            'jenjang' => 'required|string|max:50',
         ], [
-            'nama_pendidikan.required' => 'Nama pendidikan wajib diisi.',
-            'nama_pendidikan.unique'   => 'Pendidikan ini sudah terdaftar.',
-            'nama_pendidikan.max'      => 'Nama pendidikan maksimal 100 karakter.',
+            'jenjang.required' => 'Jenjang wajib diisi.',
+            'jenjang.max'      => 'Jenjang maksimal 50 karakter.',
         ]);
 
-        Pendidikan::create(['nama_pendidikan' => $request->nama_pendidikan]);
+        Pendidikan::create([
+            'jenjang' => $request->jenjang,
+        ]);
 
         return redirect()->route('pendidikan.index')
             ->with('success', 'Pendidikan berhasil ditambahkan.');
@@ -49,14 +51,15 @@ class PendidikanController extends Controller
     public function update(Request $request, Pendidikan $pendidikan)
     {
         $request->validate([
-            'nama_pendidikan' => 'required|string|max:100|unique:pendidikans,nama_pendidikan,' . $pendidikan->id_pendidikan . ',id_pendidikan',
+            'jenjang' => 'required|string|max:50',
         ], [
-            'nama_pendidikan.required' => 'Nama pendidikan wajib diisi.',
-            'nama_pendidikan.unique'   => 'Pendidikan ini sudah terdaftar.',
-            'nama_pendidikan.max'      => 'Nama pendidikan maksimal 100 karakter.',
+            'jenjang.required' => 'Jenjang wajib diisi.',
+            'jenjang.max'      => 'Jenjang maksimal 50 karakter.',
         ]);
 
-        $pendidikan->update(['nama_pendidikan' => $request->nama_pendidikan]);
+        $pendidikan->update([
+            'jenjang' => $request->jenjang,
+        ]);
 
         return redirect()->route('pendidikan.index')
             ->with('success', 'Pendidikan berhasil diperbarui.');
@@ -72,5 +75,19 @@ class PendidikanController extends Controller
 
         return redirect()->route('pendidikan.index')
             ->with('success', 'Pendidikan berhasil dihapus.');
+    }
+
+    // ── API: Ambil daftar pendidikan berdasarkan jenjang ─────────────
+    public function getByJenjang(Request $request)
+    {
+        $jenjang = $request->query('jenjang');
+
+        $pendidikans = Pendidikan::when($jenjang, function ($query) use ($jenjang) {
+                $query->where('jenjang', $jenjang);
+            })
+            ->orderBy('jenjang')
+            ->get(['id_pendidikan', 'jenjang']);
+
+        return response()->json($pendidikans);
     }
 }

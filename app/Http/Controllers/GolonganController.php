@@ -33,7 +33,7 @@ class GolonganController extends Controller
     {
         $request->validate([
             'tipe'          => 'required|in:PNS,PPPK',
-            'nama_golongan' => 'required|string|max:100|unique:golongans,nama_golongan,NULL,id,tipe,' . $request->tipe,
+            'nama_golongan' => 'required|string|max:100|unique:golongans,nama_golongan,NULL,id_golongan,tipe,' . $request->tipe,
         ], [
             'tipe.required'          => 'Tipe golongan wajib dipilih.',
             'tipe.in'                => 'Tipe golongan tidak valid.',
@@ -60,7 +60,7 @@ class GolonganController extends Controller
     {
         $request->validate([
             'tipe'          => 'required|in:PNS,PPPK',
-            'nama_golongan' => 'required|string|max:100|unique:golongans,nama_golongan,' . $golongan->id . ',id,tipe,' . $request->tipe,
+            'nama_golongan' => 'required|string|max:100|unique:golongans,nama_golongan,' . $golongan->id_golongan . ',id_golongan,tipe,' . $request->tipe,
         ], [
             'tipe.required'          => 'Tipe golongan wajib dipilih.',
             'tipe.in'                => 'Tipe golongan tidak valid.',

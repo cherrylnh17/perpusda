@@ -11,7 +11,7 @@ class KaryawanExport
 
     public function download(string $filename): \Symfony\Component\HttpFoundation\StreamedResponse
     {
-        $query = Karyawan::with(['jabatan', 'pendidikan', 'jenisKontrak'])
+        $query = Karyawan::with(['jabatan', 'pendidikan', 'jenisKontrak', 'golongan'])
             ->orderBy('nama_lengkap');
 
         if (!empty($this->filters['status'])) {
@@ -22,6 +22,9 @@ class KaryawanExport
         }
         if (!empty($this->filters['kontrak'])) {
             $query->where('id_jenis_kontrak', $this->filters['kontrak']);
+        }
+        if (!empty($this->filters['golongan'])) {
+            $query->where('id_golongan', $this->filters['golongan']);
         }
 
         $karyawans = $query->get();
@@ -38,13 +41,12 @@ class KaryawanExport
                 'Tanggal Lahir',
                 'Jabatan',
                 'Pendidikan',
+                'Golongan',
                 'Jenis Kontrak',
                 'Tgl Masuk',
-                'Tgl Mulai Jabatan',
                 'Agama',
                 'Golongan Darah',
                 'Status',
-                'Gaji',
                 'Alamat',
             ]);
 
@@ -57,14 +59,13 @@ class KaryawanExport
                     $k->jenis_kelamin ?? '-',
                     $k->tanggal_lahir?->format('d/m/Y') ?? '-',
                     $k->jabatan?->nama_jabatan ?? '-',
-                    $k->pendidikan?->nama_pendidikan ?? '-',
+                    $k->pendidikan?->jenjang ?? ($k->nama_pendidikan ?? '-'),
+                    $k->golongan?->nama_golongan ?? '-',
                     $k->jenisKontrak?->nama_kontrak ?? '-',
                     $k->tanggal_masuk?->format('d/m/Y'),
-                    $k->tanggal_mulai_jabatan?->format('d/m/Y'),
                     $k->agama ?? '-',
                     $k->golongan_darah ?? '-',
                     $k->status_aktif,
-                    number_format($k->gaji, 0, ',', '.'),
                     $k->alamat ?? '-',
                 ]);
             });
